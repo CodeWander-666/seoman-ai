@@ -1,5 +1,7 @@
 from flask import Flask, request, jsonify, make_response
-import random
+from collections import Counter
+import re
+import os
 
 # 1. Initialize Flask
 app = Flask(__name__)
@@ -15,21 +17,21 @@ def cors_response(data, status=200):
         return make_response("CORS Error", 500)
 
 # ==============================================================================
-# 🧠 CLASS 1: ENTERPRISE INTELLIGENCE (Simulation Engine)
+# 🧠 CLASS 1: ENTERPRISE INTELLIGENCE (Logic Engine)
 # ==============================================================================
 class EnterpriseIntelligence:
     @staticmethod
     def run_deep_analysis(scrape_data, authority_data, speed_data):
-        # 1. SIMULATED GSC
+        # 1. TRAFFIC ESTIMATION
         auth_score = authority_data.get('page_rank', 0) or 0.1
         word_count = scrape_data.get('content', {}).get('word_count', 0)
         est_traffic = int((auth_score * 15 * word_count) / 40)
         
-        # 2. SIMULATED GA4
+        # 2. BEHAVIOR ESTIMATION
         speed = speed_data.get('speed_score', 50)
         est_bounce_rate = max(25, min(90, 100 - (speed * 0.6)))
         
-        # 3. SIMULATED ADS
+        # 3. ADS VALUE ESTIMATION
         keywords = scrape_data.get('content', {}).get('keywords', [])
         monetized_keywords = []
         for word, count in keywords:
@@ -53,20 +55,15 @@ class EnterpriseIntelligence:
         }
 
 # ==============================================================================
-# 🔌 CLASS 2: API CONNECTOR (The External Link)
-# ==============================================================================
-# ==============================================================================
 # 🔌 CLASS 2: API CONNECTOR (Diagnostic Mode)
 # ==============================================================================
 class APIConnector:
-    # --- 1. SCRAPING (Stealth Mode) ---
+    # --- 1. SCRAPING ---
     @staticmethod
     def stealth_scrape(url):
         import requests
         from bs4 import BeautifulSoup
-        import re
-        from collections import Counter
-
+        
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36',
             'Referer': 'https://www.google.com/'
@@ -110,12 +107,10 @@ class APIConnector:
             resp = requests.get(endpoint, params={"url": url, "strategy": "mobile", "key": key}, timeout=9)
             
             if resp.status_code != 200: 
-                # Diagnostic: Return the HTTP Code
                 return {"speed_score": 0, "lcp": f"HTTP {resp.status_code}", "cls": "API Error"}
             
             data = resp.json()
             if 'error' in data: 
-                # Diagnostic: Return the Google Error Code
                 err = data['error'].get('message', 'Unknown')
                 return {"speed_score": 0, "lcp": "GOOGLE ERR", "cls": err[:15]}
 
@@ -182,89 +177,6 @@ class APIConnector:
         except Exception as e:
             # CASE 3: CODE CRASH
             return f"PYTHON CRASH: {str(e)}"
-
-    # --- 2. GOOGLE PAGESPEED ---
-    @staticmethod
-    def get_google(url, key):
-        import requests
-        if not key: return {"speed_score": 0, "lcp": "NO KEY", "cls": "Check Vercel Env"}
-        
-        try:
-            endpoint = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
-            resp = requests.get(endpoint, params={"url": url, "strategy": "mobile", "key": key}, timeout=9)
-            
-            if resp.status_code != 200: return {"speed_score": 0, "lcp": f"API {resp.status_code}", "cls": "Google Error"}
-            
-            data = resp.json()
-            if 'error' in data: return {"speed_score": 0, "lcp": "Quota Limit", "cls": "Billing/Key"}
-
-            lh = data.get('lighthouseResult', {})
-            score = lh.get('categories', {}).get('performance', {}).get('score', 0)
-            audits = lh.get('audits', {})
-            
-            return {
-                "speed_score": int(score * 100),
-                "lcp": audits.get('largest-contentful-paint', {}).get('displayValue', 'N/A'),
-                "cls": audits.get('cumulative-layout-shift', {}).get('displayValue', 'N/A')
-            }
-        except Exception:
-            return {"speed_score": 0, "lcp": "TIMEOUT", "cls": "Google Slow"}
-
-    # --- 3. AUTHORITY ---
-    @staticmethod
-    def get_authority(url, key):
-        import requests
-        if not key: raise Exception("No Key")
-        
-        domain = url.split("//")[-1].split("/")[0].replace("www.", "")
-        resp = requests.get(f"https://openpagerank.com/api/v1.0/getPageRank?domains[]={domain}", headers={'API-OPR': key}, timeout=10)
-        d = resp.json()['response'][0]
-        return { "page_rank": d['page_rank_decimal'] or 0, "rank": d['rank'], "domain": d['domain'] }
-
-    # --- 4. AI ADVISOR (HYBRID: API + LOCAL FALLBACK) ---
-    @staticmethod
-    def get_ai_advice(seo_data, api_key):
-        """
-        Attempts to use Google Gemini. 
-        If it fails for ANY reason, falls back to a smart Python logic generator 
-        so the user ALWAYS gets a recommendation.
-        """
-        # 1. Attempt Real AI
-        if api_key:
-            try:
-                import requests
-                # Use the most standard, widely available model alias
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
-                
-                stats = f"Speed:{seo_data.get('technical',{}).get('speed_score')}, Traffic:{seo_data.get('enterprise',{}).get('search_console_projection',{}).get('est_monthly_traffic')}"
-                prompt = f"SEO Audit. Stats: [{stats}]. Give 1 punchy technical fix (max 15 words)."
-                
-                resp = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]}, timeout=6)
-                
-                if resp.status_code == 200:
-                    return resp.json()['candidates'][0]['content']['parts'][0]['text']
-            except:
-                pass # Silently fail to local fallback
-        
-        # 2. Local Fallback (The "Any Way" Safety Net)
-        # We generate a recommendation based on the data we DO have.
-        speed = seo_data.get('technical', {}).get('speed_score', 0)
-        words = seo_data.get('content', {}).get('word_count', 0)
-        desc = seo_data.get('content', {}).get('description', False)
-        
-        advice_list = []
-        if speed < 50:
-            advice_list.append("Critical: Compress images and minify JS to boost load speed.")
-            advice_list.append("Urgent: Mobile performance is hurting ranking; optimize render path.")
-        elif words < 300:
-            advice_list.append("Strategy: Expand content depth; current word count is too thin for ranking.")
-        elif not desc:
-            advice_list.append("Quick Fix: Add a Meta Description to improve Click-Through Rate.")
-        else:
-            advice_list.append("Growth: Technical health is stable; focus on acquiring high-authority backlinks.")
-            advice_list.append("Scale: Speed is good; expand keyword coverage with new blog clusters.")
-            
-        return random.choice(advice_list)
 
 # ==============================================================================
 # 🛡️ CLASS 3: SELF REPAIR
@@ -360,7 +272,7 @@ def analyze():
     # 5. DIAGNOSIS
     output['diagnosis'] = Diagnose.check_health(output)
 
-    # 6. AI STRATEGY (Hybrid)
+    # 6. AI STRATEGY (DIAGNOSTIC MODE)
     output['ai_strategy'] = SelfRepair.guard("AI", lambda: APIConnector.get_ai_advice(output, AI_KEY), "Recommendation Engine Active")
 
     return cors_response(output)
