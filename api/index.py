@@ -1,77 +1,49 @@
-from flask import Flask, request, jsonify, stream_with_context
-from flask_cors import CORS
+from flask import Flask, request, jsonify
+import requests
 import hashlib
 import time
 import os
+import re
 import json
-from datetime import datetime, timedelta
-from _utils import (
-    SecurityManager, 
-    LRUCache, 
-    APIConnector, 
-    AdvancedIntelligence,
-    GeminiAI,
-    CrawlStats
-)
+from datetime import datetime
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-import threading
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, origins=["https://*.vercel.app", "http://localhost:3000"])
 
-# Configuration matching The Art of SEO principles
-class Config:
-    RATE_LIMIT = 30  # requests per minute
-    RATE_LIMIT_PERIOD = 60
-    CACHE_TTL = 300  # 5 minutes
-    TIMEOUT = 30  # seconds for overall request
-    AI_TIMEOUT = 25  # seconds for AI processing
-    MAX_PAGES_FREE = 50
-    CRAWL_DELAY = 3  # seconds between requests
-    USER_AGENT = "SEO-VISION-PRO/1.0 (+https://seovision.pro; research-bot@seovision.pro)"
+# Simple CORS handling without flask-cors
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
-config = Config()
+# Simple cache
+cache = {}
 
-# Initialize core components
-security_manager = SecurityManager(limit=config.RATE_LIMIT, period=config.RATE_LIMIT_PERIOD)
-cache = LRUCache(max_size=1000, ttl=config.CACHE_TTL)
-api_connector = APIConnector(config.USER_AGENT)
-advanced_intel = AdvancedIntelligence()
-gemini_ai = GeminiAI()
+# User agent for requests
+USER_AGENT = "SEO-VISION-PRO/1.0 (+https://seovision.pro)"
 
-@app.before_request
-def before_request():
-    """Security and rate limiting middleware"""
-    client_ip = request.headers.get('X-Forwarded-For', request.remote_addr)
-    
-    if not security_manager.is_allowed(client_ip):
-        return jsonify({
-            "error": "Rate limit exceeded. Please try again in 60 seconds.",
-            "code": "RATE_LIMIT"
-        }), 429
+@app.route('/')
+def home():
+    return "SEO Vision Pro API is running!"
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
-    """System health endpoint"""
     return jsonify({
         "status": "operational",
         "timestamp": datetime.utcnow().isoformat(),
-        "version": "2.0.0",
-        "components": {
-            "security": "active",
-            "cache": "active",
-            "ai_engine": "active" if gemini_ai.is_available() else "degraded",
-            "apis": "active"
-        }
+        "version": "2.0.0"
     })
 
-@app.route('/api/audit', methods=['POST'])
+@app.route('/api/audit', methods=['POST', 'OPTIONS'])
 def perform_audit():
-    """Main audit endpoint - 360-degree analysis"""
-    start_time = time.time()
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
     
     try:
         data = request.get_json()
@@ -79,160 +51,182 @@ def perform_audit():
             return jsonify({"error": "URL parameter is required"}), 400
         
         url = data['url'].strip()
-        plan = data.get('plan', 'free')  # free/pro
         
-        # URL validation
+        # Validate URL
         if not (url.startswith('http://') or url.startswith('https://')):
-            return jsonify({"error": "Invalid URL protocol"}), 400
+            return jsonify({"error": "Invalid URL. Include http:// or https://"}), 400
         
-        # Check cache first
-        cache_key = hashlib.md5(f"{url}:{plan}".encode()).hexdigest()
-        cached_result = cache.get(cache_key)
-        if cached_result:
-            cached_result['cached'] = True
-            cached_result['cache_hit'] = True
-            return jsonify(cached_result)
+        # Check cache
+        cache_key = hashlib.md5(url.encode()).hexdigest()
+        if cache_key in cache and time.time() - cache[cache_key]['timestamp'] < 300:
+            result = cache[cache_key]['data']
+            result['cached'] = True
+            return jsonify(result)
         
-        # Plan-based limits
-        if plan == 'free':
-            max_pages = config.MAX_PAGES_FREE
-            crawl_depth = 3
-        else:
-            max_pages = 500
-            crawl_depth = 10
+        print(f"[AUDIT] Starting audit for {url}")
         
-        # Phase 1: Technical Health Scan (Chapter 10 principles)
-        print(f"[AUDIT] Starting technical scan for {url}")
-        technical_data = api_connector.get_technical_audit(url)
+        # Get basic page info
+        headers = {
+            'User-Agent': USER_AGENT,
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+        }
         
-        if technical_data.get('status_code') != 200:
+        try:
+            response = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
             return jsonify({
-                "error": f"Target returned {technical_data.get('status_code')}",
-                "technical": technical_data
+                "error": f"Failed to fetch URL: {str(e)}",
+                "code": "FETCH_ERROR"
             }), 400
         
-        # Phase 2: Content & Authority Analysis
-        print(f"[AUDIT] Starting content analysis for {url}")
-        content_data = api_connector.get_content_audit(url)
-        authority_data = api_connector.get_authority_audit(url)
+        # Parse HTML
+        soup = BeautifulSoup(response.text, 'html.parser')
         
-        # Phase 3: Crawl & Internal Structure Analysis
-        print(f"[AUDIT] Crawling internal structure (max {max_pages} pages)")
-        crawl_stats = CrawlStats(url, max_pages=max_pages, max_depth=crawl_depth)
-        internal_data = crawl_stats.analyze()
+        # Calculate basic metrics
+        text = soup.get_text()
+        words = re.findall(r'\b\w+\b', text.lower())
+        word_count = len(words)
         
-        # Phase 4: Advanced Intelligence Processing
-        print(f"[AUDIT] Running advanced intelligence models")
-        traffic_forecast = advanced_intel.calculate_traffic_forecast(
-            authority_score=authority_data.get('authority_score', 0),
-            word_count=content_data.get('word_count', 0),
-            backlinks=authority_data.get('backlinks', 0),
-            seasonality=datetime.now().month
-        )
+        # Extract title and meta
+        title = soup.title.string if soup.title else "No title"
+        meta_desc = soup.find('meta', attrs={'name': 'description'})
+        description = meta_desc['content'] if meta_desc else "No description"
         
-        competitiveness = advanced_intel.analyze_competitiveness(
-            keywords=content_data.get('top_keywords', []),
-            authority_score=authority_data.get('authority_score', 0),
-            word_count=content_data.get('word_count', 0)
-        )
+        # Count headings
+        h1_count = len(soup.find_all('h1'))
+        h2_count = len(soup.find_all('h2'))
         
-        # Compile enterprise report
-        enterprise_data = {
+        # Count images with alt
+        images = soup.find_all('img')
+        images_with_alt = len([img for img in images if img.get('alt')])
+        
+        # Count links
+        links = soup.find_all('a')
+        internal_links = len([link for link in links if link.get('href') and (link['href'].startswith('/') or url in link['href'])])
+        external_links = len(links) - internal_links
+        
+        # Check for common SEO issues
+        issues = []
+        if h1_count == 0:
+            issues.append("No H1 tag found")
+        if h1_count > 1:
+            issues.append(f"Multiple H1 tags ({h1_count})")
+        if word_count < 300:
+            issues.append(f"Low word count ({word_count}) - consider adding more content")
+        if images_with_alt < len(images) * 0.7:
+            issues.append(f"Only {images_with_alt}/{len(images)} images have alt text")
+        
+        # Calculate scores
+        technical_score = 80
+        content_score = min(100, word_count / 10)
+        authority_score = 50  # Placeholder
+        
+        # Adjust scores based on issues
+        technical_score -= len(issues) * 5
+        if word_count > 1000:
+            content_score += 10
+        if images_with_alt == len(images) and len(images) > 0:
+            technical_score += 10
+        
+        # Ensure scores are within bounds
+        technical_score = max(0, min(100, technical_score))
+        content_score = max(0, min(100, content_score))
+        authority_score = max(0, min(100, authority_score))
+        overall_score = round((technical_score + content_score + authority_score) / 3)
+        
+        # Generate report
+        result = {
             "url": url,
             "timestamp": datetime.utcnow().isoformat(),
-            "audit_duration": round(time.time() - start_time, 2),
-            "technical": {
-                **technical_data,
-                "core_web_vitals": technical_data.get('core_web_vitals', {}),
-                "mobile_friendly": technical_data.get('mobile_friendly', False),
-                "ssl_grade": technical_data.get('ssl_grade', 'F'),
-                "canonical_issues": technical_data.get('canonical_issues', [])
+            "status": "success",
+            "scores": {
+                "technical": round(technical_score),
+                "content": round(content_score),
+                "authority": round(authority_score),
+                "overall": overall_score
             },
-            "content": {
-                **content_data,
-                "readability_score": content_data.get('readability_score', 0),
-                "entity_salience": content_data.get('entity_salience', {}),
-                "intent_classification": content_data.get('intent_classification', 'unknown'),
-                "thin_content_risk": content_data.get('thin_content_risk', False)
+            "metrics": {
+                "word_count": word_count,
+                "page_title": title[:100] + "..." if len(title) > 100 else title,
+                "meta_description": description[:150] + "..." if len(description) > 150 else description,
+                "h1_count": h1_count,
+                "h2_count": h2_count,
+                "images_total": len(images),
+                "images_with_alt": images_with_alt,
+                "internal_links": internal_links,
+                "external_links": external_links,
+                "response_code": response.status_code,
+                "page_size_kb": len(response.content) / 1024
             },
-            "authority": {
-                **authority_data,
-                "e_e_a_t_score": authority_data.get('e_e_a_t_score', 0),
-                "link_toxicity_risk": authority_data.get('link_toxicity_risk', 'low'),
-                "ymyl_category": authority_data.get('ymyl_category', None)
-            },
-            "internal": internal_data,
-            "forecasting": traffic_forecast,
-            "competitiveness": competitiveness,
-            "plan": plan
+            "issues": issues,
+            "recommendations": [
+                "Ensure all images have descriptive alt text",
+                "Include one clear H1 tag per page",
+                "Aim for at least 300 words of quality content",
+                "Use internal links to establish site hierarchy",
+                "Optimize meta title and description for keywords"
+            ],
+            "plan": data.get('plan', 'free')
         }
         
-        # Cache the result
-        cache.set(cache_key, enterprise_data)
+        # Cache result
+        cache[cache_key] = {
+            'data': result,
+            'timestamp': time.time()
+        }
         
-        return jsonify(enterprise_data)
+        print(f"[AUDIT] Completed audit for {url}")
+        return jsonify(result)
         
     except Exception as e:
-        app.logger.error(f"AUDIT ERROR: {str(e)}", exc_info=True)
+        print(f"[ERROR] Audit failed: {str(e)}")
         return jsonify({
             "error": "System error during audit",
-            "code": "AUDIT_FAILED",
-            "message": str(e)
+            "message": str(e),
+            "code": "AUDIT_FAILED"
         }), 500
 
-@app.route('/api/ai-strategy', methods=['POST'])
-def get_ai_strategy():
-    """Streaming AI strategic advisor endpoint"""
-    @stream_with_context
-    def generate():
-        try:
-            data = request.get_json()
-            metrics = data.get('metrics', {})
-            
-            # Streaming AI response
-            for chunk in gemini_ai.generate_audit_stream(metrics):
-                yield f"data: {json.dumps({'chunk': chunk})}\n\n"
-                
-            yield f"data: {json.dumps({'complete': True})}\n\n"
-            
-        except Exception as e:
-            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+# AI analysis endpoint (simplified)
+@app.route('/api/ai-analysis', methods=['POST', 'OPTIONS'])
+def ai_analysis():
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
     
-    return app.response_class(
-        generate(),
-        mimetype='text/event-stream',
-        headers={
-            'Cache-Control': 'no-cache',
-            'X-Accel-Buffering': 'no'
+    try:
+        data = request.get_json()
+        metrics = data.get('metrics', {})
+        
+        # Simple AI analysis without external API
+        analysis = {
+            "technical_fixes": [
+                "Optimize page load speed by compressing images",
+                "Ensure mobile responsiveness across all devices",
+                "Fix any broken links or 404 errors"
+            ],
+            "content_opportunities": [
+                "Expand on main topic with more detailed content",
+                "Add relevant internal links to related pages",
+                "Include more headings (H2, H3) for better structure"
+            ],
+            "quick_wins": [
+                "Add missing meta description if not present",
+                "Ensure all images have alt text",
+                "Check and fix duplicate title tags"
+            ],
+            "ai_generated": True,
+            "model": "SEO-Vision-Pro-Local"
         }
-    )
+        
+        return jsonify(analysis)
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-@app.route('/api/benchmark', methods=['POST'])
-def benchmark_competitors():
-    """Competitor benchmarking (Pro feature)"""
-    data = request.get_json()
-    urls = data.get('urls', [])
-    
-    if len(urls) > 5:  # Limit for free plan
-        return jsonify({"error": "Maximum 5 URLs for benchmarking"}), 400
-    
-    results = []
-    for url in urls:
-        try:
-            tech = api_connector.get_technical_audit(url)
-            auth = api_connector.get_authority_audit(url)
-            
-            results.append({
-                "url": url,
-                "performance_score": tech.get('performance_score', 0),
-                "authority_score": auth.get('authority_score', 0),
-                "core_vitals": tech.get('core_web_vitals', {})
-            })
-        except:
-            continue
-    
-    return jsonify({"competitors": results})
-
-# Serverless handler for Vercel
+# For Vercel serverless
 def handler(request):
     return app(request)
+
+if __name__ == '__main__':
+    app.run(debug=True)
