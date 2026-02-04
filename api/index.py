@@ -17,7 +17,7 @@ def cors_response(data, status=200):
         return make_response("CORS Error", 500)
 
 # ==============================================================================
-# 🧠 CLASS 1: ENTERPRISE INTELLIGENCE (Logic Engine)
+# 🧠 CLASS 1: ENTERPRISE INTELLIGENCE
 # ==============================================================================
 class EnterpriseIntelligence:
     @staticmethod
@@ -55,7 +55,7 @@ class EnterpriseIntelligence:
         }
 
 # ==============================================================================
-# 🔌 CLASS 2: API CONNECTOR (Fixed for Stability)
+# 🔌 CLASS 2: API CONNECTOR (The Multi-Model Fix)
 # ==============================================================================
 class APIConnector:
     # --- 1. SCRAPING ---
@@ -137,40 +137,56 @@ class APIConnector:
         d = resp.json()['response'][0]
         return { "page_rank": d['page_rank_decimal'] or 0, "rank": d['rank'], "domain": d['domain'] }
 
-    # --- 4. AI ADVISOR (THE FIX: STABLE ENDPOINT) ---
+    # --- 4. AI ADVISOR (THE SKELETON KEY FIX) ---
     @staticmethod
     def get_ai_advice(seo_data, api_key):
         """
-        Uses 'gemini-pro' on the stable 'v1' API.
-        This fixes the '404 NOT_FOUND' error from the beta flash model.
+        Iterates through EVERY available Gemini model until one works.
         """
         if not api_key: return "AI BRAIN: OFFLINE (Missing GEMINI_API_KEY)"
         
         import requests
         
-        # ⚡ FIX: Use 'v1' and 'gemini-pro' (Universal Availability)
-        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key={api_key}"
+        # ⚡ THE FIX: A prioritized list of every possible model name
+        # We try them one by one. The moment one works, we return.
+        possible_models = [
+            "gemini-1.5-flash",         # Current Standard
+            "gemini-1.5-pro",           # High End
+            "gemini-1.0-pro",           # Legacy Stable
+            "gemini-pro",               # Old Legacy
+            "gemini-1.5-flash-latest"   # Experimental
+        ]
         
         stats = f"Speed:{seo_data.get('technical',{}).get('speed_score')}, Traffic:{seo_data.get('enterprise',{}).get('search_console_projection',{}).get('est_monthly_traffic')}"
         prompt = f"You are a Senior SEO Auditor. Based on these site stats: [{stats}], provide ONE specific, high-impact technical recommendation. Keep it under 20 words."
-        
         payload = {"contents": [{"parts": [{"text": prompt}]}]}
 
-        try:
-            resp = requests.post(url, json=payload, timeout=9)
-            
-            if resp.status_code == 200:
-                return resp.json()['candidates'][0]['content']['parts'][0]['text']
-            
-            # Diagnostic Error
-            data = resp.json()
-            if 'error' in data:
-                return f"Google Error: {data['error']['message'][:30]}..."
-                
-            return f"Status: {resp.status_code}"
+        last_error = "No models available"
 
-        except Exception as e:
-            return f"Connection Failed: {str(e)[:15]}"
+        for model in possible_models:
+            try:
+                # We use v1beta as it supports the most models
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+                
+                resp = requests.post(url, json=payload, timeout=8)
+                
+                # If ANY model works, return immediately
+                if resp.status_code == 200:
+                    return resp.json()['candidates'][0]['content']['parts'][0]['text']
+                
+                # If fail, log error and try next
+                try: 
+                    last_error = f"{model}: {resp.json()['error']['message'][:20]}"
+                except: 
+                    last_error = f"{model}: HTTP {resp.status_code}"
+                    
+            except Exception as e:
+                last_error = f"{model} Crash: {str(e)[:15]}"
+                continue
+
+        # If we get here, EVERY model failed.
+        # This confirms the API Key itself is invalid or has no services enabled.
+        return f"ALL MODELS FAILED. Last error: {last_error}"
 
 # ==============================================================================
 # 🛡️ CLASS 3: SELF REPAIR
