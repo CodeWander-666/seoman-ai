@@ -109,29 +109,26 @@ class APIConnector:
     @staticmethod
     def get_google(url, key):
         import requests
-        # 1. Debug: Check if Key exists
-        if not key: 
-            return {"speed_score": 0, "lcp": "MISSING KEY", "cls": "Check Vercel Env"}
+        if not key: return {"speed_score": 0, "lcp": "NO KEY", "cls": "Check Vercel Env"}
         
         try:
+            # ⚡ CRITICAL FIX: Timeout set to 9s (Must be under Vercel's 10s limit)
             endpoint = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
-            # 2. Request: Increased timeout to 20s (PageSpeed is slow)
-            resp = requests.get(endpoint, params={"url": url, "strategy": "mobile", "key": key}, timeout=20)
+            resp = requests.get(
+                endpoint, 
+                params={"url": url, "strategy": "mobile", "key": key}, 
+                timeout=9 
+            )
             
-            # 3. Debug: Check HTTP Status
+            # Handle Google API Errors
             if resp.status_code != 200:
-                err_msg = f"Error {resp.status_code}"
-                # Try to parse the specific Google error message
-                try: err_msg = resp.json()['error']['message'][:20]
-                except: pass
-                return {"speed_score": 0, "lcp": "API FAILED", "cls": err_msg}
-            
+                return {"speed_score": 0, "lcp": f"API {resp.status_code}", "cls": "Google Error"}
+                
             data = resp.json()
-            
-            # 4. Debug: Check Logic Errors
             if 'error' in data:
-                return {"speed_score": 0, "lcp": "QUOTA LIMIT", "cls": "Billing/Limit"}
+                return {"speed_score": 0, "lcp": "Quota Limit", "cls": "Billing/Key"}
 
+            # Success Parsing
             lh = data.get('lighthouseResult', {})
             score = lh.get('categories', {}).get('performance', {}).get('score', 0)
             audits = lh.get('audits', {})
@@ -141,9 +138,13 @@ class APIConnector:
                 "lcp": audits.get('largest-contentful-paint', {}).get('displayValue', 'N/A'),
                 "cls": audits.get('cumulative-layout-shift', {}).get('displayValue', 'N/A')
             }
+            
+        except requests.exceptions.Timeout:
+            # Graceful fallback if Google is too slow
+            return {"speed_score": 0, "lcp": "TIMEOUT", "cls": "Google Slow"}
         except Exception as e:
-            # 5. Debug: Catch Crashes
-            return {"speed_score": 0, "lcp": "CRASH", "cls": str(e)[:15]}
+            # Catch Connection errors
+            return {"speed_score": 0, "lcp": "CONN FAIL", "cls": "Network Error"}
 
     @staticmethod
     def get_authority(url, key):
