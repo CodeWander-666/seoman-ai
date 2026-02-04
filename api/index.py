@@ -55,7 +55,7 @@ class EnterpriseIntelligence:
         }
 
 # ==============================================================================
-# 🔌 CLASS 2: API CONNECTOR (Diagnostic Mode)
+# 🔌 CLASS 2: API CONNECTOR (Fixed for Stability)
 # ==============================================================================
 class APIConnector:
     # --- 1. SCRAPING ---
@@ -137,46 +137,40 @@ class APIConnector:
         d = resp.json()['response'][0]
         return { "page_rank": d['page_rank_decimal'] or 0, "rank": d['rank'], "domain": d['domain'] }
 
-    # --- 4. AI ADVISOR (STRICT DIAGNOSTIC MODE) ---
+    # --- 4. AI ADVISOR (THE FIX: STABLE ENDPOINT) ---
     @staticmethod
     def get_ai_advice(seo_data, api_key):
         """
-        No simulations. No fallbacks. 
-        Tries to hit Google Gemini and returns the RAW error if it fails.
+        Uses 'gemini-pro' on the stable 'v1' API.
+        This fixes the '404 NOT_FOUND' error from the beta flash model.
         """
-        if not api_key: return "DIAGNOSTIC: Missing GEMINI_API_KEY in Vercel."
+        if not api_key: return "AI BRAIN: OFFLINE (Missing GEMINI_API_KEY)"
         
         import requests
         
-        # We try the most stable model endpoint
-        # If this fails, the error message will tell us EXACTLY why (e.g., 'Model not found')
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        # ⚡ FIX: Use 'v1' and 'gemini-pro' (Universal Availability)
+        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key={api_key}"
         
-        stats = f"Speed:{seo_data.get('technical',{}).get('speed_score')}"
-        prompt = f"Analyze site speed: {stats}. 1 sentence advice."
+        stats = f"Speed:{seo_data.get('technical',{}).get('speed_score')}, Traffic:{seo_data.get('enterprise',{}).get('search_console_projection',{}).get('est_monthly_traffic')}"
+        prompt = f"You are a Senior SEO Auditor. Based on these site stats: [{stats}], provide ONE specific, high-impact technical recommendation. Keep it under 20 words."
+        
         payload = {"contents": [{"parts": [{"text": prompt}]}]}
 
         try:
-            resp = requests.post(url, json=payload, timeout=8)
+            resp = requests.post(url, json=payload, timeout=9)
             
-            # CASE 1: SUCCESS
             if resp.status_code == 200:
                 return resp.json()['candidates'][0]['content']['parts'][0]['text']
             
-            # CASE 2: API FAILURE (The important part)
-            error_data = resp.json()
-            if 'error' in error_data:
-                # We extract the specific error code and message
-                code = error_data['error'].get('code', 'NoCode')
-                msg = error_data['error'].get('message', 'NoMsg')
-                status = error_data['error'].get('status', 'NoStatus')
-                return f"GOOGLE REJECTED: {status} | {msg} (Code: {code})"
-            
-            return f"HTTP ERROR: {resp.status_code}"
+            # Diagnostic Error
+            data = resp.json()
+            if 'error' in data:
+                return f"Google Error: {data['error']['message'][:30]}..."
+                
+            return f"Status: {resp.status_code}"
 
         except Exception as e:
-            # CASE 3: CODE CRASH
-            return f"PYTHON CRASH: {str(e)}"
+            return f"Connection Failed: {str(e)[:15]}"
 
 # ==============================================================================
 # 🛡️ CLASS 3: SELF REPAIR
@@ -272,7 +266,7 @@ def analyze():
     # 5. DIAGNOSIS
     output['diagnosis'] = Diagnose.check_health(output)
 
-    # 6. AI STRATEGY (DIAGNOSTIC MODE)
+    # 6. AI STRATEGY
     output['ai_strategy'] = SelfRepair.guard("AI", lambda: APIConnector.get_ai_advice(output, AI_KEY), "Recommendation Engine Active")
 
     return cors_response(output)
