@@ -55,8 +55,11 @@ class EnterpriseIntelligence:
 # ==============================================================================
 # 🔌 CLASS 2: API CONNECTOR (The External Link)
 # ==============================================================================
+# ==============================================================================
+# 🔌 CLASS 2: API CONNECTOR (Diagnostic Mode)
+# ==============================================================================
 class APIConnector:
-    # --- 1. SCRAPING ---
+    # --- 1. SCRAPING (Stealth Mode) ---
     @staticmethod
     def stealth_scrape(url):
         import requests
@@ -95,6 +98,90 @@ class APIConnector:
             },
             "raw_text": text[:1000]
         }
+
+    # --- 2. GOOGLE PAGESPEED ---
+    @staticmethod
+    def get_google(url, key):
+        import requests
+        if not key: return {"speed_score": 0, "lcp": "NO KEY", "cls": "Check Vercel Env"}
+        
+        try:
+            endpoint = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
+            resp = requests.get(endpoint, params={"url": url, "strategy": "mobile", "key": key}, timeout=9)
+            
+            if resp.status_code != 200: 
+                # Diagnostic: Return the HTTP Code
+                return {"speed_score": 0, "lcp": f"HTTP {resp.status_code}", "cls": "API Error"}
+            
+            data = resp.json()
+            if 'error' in data: 
+                # Diagnostic: Return the Google Error Code
+                err = data['error'].get('message', 'Unknown')
+                return {"speed_score": 0, "lcp": "GOOGLE ERR", "cls": err[:15]}
+
+            lh = data.get('lighthouseResult', {})
+            score = lh.get('categories', {}).get('performance', {}).get('score', 0)
+            audits = lh.get('audits', {})
+            
+            return {
+                "speed_score": int(score * 100),
+                "lcp": audits.get('largest-contentful-paint', {}).get('displayValue', 'N/A'),
+                "cls": audits.get('cumulative-layout-shift', {}).get('displayValue', 'N/A')
+            }
+        except Exception as e:
+            return {"speed_score": 0, "lcp": "CRASH", "cls": str(e)[:15]}
+
+    # --- 3. AUTHORITY ---
+    @staticmethod
+    def get_authority(url, key):
+        import requests
+        if not key: raise Exception("No Key")
+        
+        domain = url.split("//")[-1].split("/")[0].replace("www.", "")
+        resp = requests.get(f"https://openpagerank.com/api/v1.0/getPageRank?domains[]={domain}", headers={'API-OPR': key}, timeout=10)
+        d = resp.json()['response'][0]
+        return { "page_rank": d['page_rank_decimal'] or 0, "rank": d['rank'], "domain": d['domain'] }
+
+    # --- 4. AI ADVISOR (STRICT DIAGNOSTIC MODE) ---
+    @staticmethod
+    def get_ai_advice(seo_data, api_key):
+        """
+        No simulations. No fallbacks. 
+        Tries to hit Google Gemini and returns the RAW error if it fails.
+        """
+        if not api_key: return "DIAGNOSTIC: Missing GEMINI_API_KEY in Vercel."
+        
+        import requests
+        
+        # We try the most stable model endpoint
+        # If this fails, the error message will tell us EXACTLY why (e.g., 'Model not found')
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        
+        stats = f"Speed:{seo_data.get('technical',{}).get('speed_score')}"
+        prompt = f"Analyze site speed: {stats}. 1 sentence advice."
+        payload = {"contents": [{"parts": [{"text": prompt}]}]}
+
+        try:
+            resp = requests.post(url, json=payload, timeout=8)
+            
+            # CASE 1: SUCCESS
+            if resp.status_code == 200:
+                return resp.json()['candidates'][0]['content']['parts'][0]['text']
+            
+            # CASE 2: API FAILURE (The important part)
+            error_data = resp.json()
+            if 'error' in error_data:
+                # We extract the specific error code and message
+                code = error_data['error'].get('code', 'NoCode')
+                msg = error_data['error'].get('message', 'NoMsg')
+                status = error_data['error'].get('status', 'NoStatus')
+                return f"GOOGLE REJECTED: {status} | {msg} (Code: {code})"
+            
+            return f"HTTP ERROR: {resp.status_code}"
+
+        except Exception as e:
+            # CASE 3: CODE CRASH
+            return f"PYTHON CRASH: {str(e)}"
 
     # --- 2. GOOGLE PAGESPEED ---
     @staticmethod
