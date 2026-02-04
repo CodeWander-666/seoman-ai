@@ -5,9 +5,8 @@ class SEOVisionPro {
     }
 
     init() {
-        console.log('SEO Vision Pro Initialized');
+        console.log('SEO Vision Pro - REAL Analysis');
         this.bindEvents();
-        this.setupDemo();
         this.testConnection();
     }
 
@@ -15,10 +14,12 @@ class SEOVisionPro {
         try {
             const response = await fetch(`${this.baseURL}/api/health`);
             if (response.ok) {
-                console.log('✅ API is connected');
+                const data = await response.json();
+                console.log('✅ API Connected:', data);
+                this.showNotification('✅ Connected to Real SEO Analyzer', 'success');
             }
         } catch (error) {
-            console.warn('⚠️ API connection test failed');
+            console.warn('⚠️ API test failed:', error);
         }
     }
 
@@ -39,18 +40,10 @@ class SEOVisionPro {
         if (newAuditBtn) {
             newAuditBtn.addEventListener('click', () => this.resetAudit());
         }
-    }
-
-    setupDemo() {
-        const urlInput = document.getElementById('urlInput');
-        if (urlInput) {
-            const demoUrls = [
-                'https://example.com',
-                'https://google.com',
-                'https://github.com',
-                'https://stackoverflow.com'
-            ];
-            urlInput.placeholder = `Try: ${demoUrls[Math.floor(Math.random() * demoUrls.length)]}`;
+        
+        const exportBtn = document.getElementById('exportPDF');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => this.exportReport());
         }
     }
 
@@ -68,7 +61,7 @@ class SEOVisionPro {
         const url = urlInput ? urlInput.value.trim() : '';
         
         if (!url) {
-            this.showNotification('Please enter a URL', 'error');
+            this.showNotification('Please enter a URL to analyze', 'error');
             return;
         }
         
@@ -84,10 +77,13 @@ class SEOVisionPro {
         this.showLoading();
         
         try {
+            console.log('Starting REAL analysis for:', url);
+            
             const response = await fetch(`${this.baseURL}/api/audit`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify({
                     url: url,
@@ -96,21 +92,27 @@ class SEOVisionPro {
             });
             
             if (!response.ok) {
-                const error = await response.json().catch(() => ({ error: 'Network error' }));
+                const error = await response.json();
                 throw new Error(error.error || `HTTP ${response.status}`);
             }
             
             const data = await response.json();
+            console.log('REAL Analysis completed:', data);
             
             if (data.error) {
                 throw new Error(data.message || data.error);
             }
             
-            this.displayResults(data);
+            // Verify it's real analysis
+            if (!data.real_analysis && data.error) {
+                throw new Error(data.message || 'Analysis failed');
+            }
+            
+            this.displayRealResults(data);
             
         } catch (error) {
             console.error('Audit error:', error);
-            this.showNotification(`Audit failed: ${error.message}`, 'error');
+            this.showNotification(`❌ ${error.message}`, 'error');
             this.hideLoading();
         }
     }
@@ -118,11 +120,18 @@ class SEOVisionPro {
     showLoading() {
         const loading = document.getElementById('loading');
         const btn = document.getElementById('auditButton');
+        const progressText = document.getElementById('progressText');
         
-        if (loading) loading.style.display = 'block';
+        if (loading) {
+            loading.style.display = 'block';
+            if (progressText) {
+                progressText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing real website data...';
+            }
+        }
+        
         if (btn) {
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SCANNING...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ANALYZING...';
         }
         
         this.animateProgress();
@@ -131,32 +140,33 @@ class SEOVisionPro {
     animateProgress() {
         const progressFill = document.getElementById('progressFill');
         const progressPercent = document.getElementById('progressPercent');
-        const progressText = document.getElementById('progressText');
         
         if (!progressFill) return;
         
         let progress = 0;
         const stages = [
-            'Fetching URL...',
+            'Fetching website...',
             'Analyzing content...',
-            'Checking structure...',
+            'Checking technical SEO...',
+            'Calculating scores...',
             'Generating report...'
         ];
         
         const interval = setInterval(() => {
-            progress += Math.random() * 5 + 1;
-            if (progress > 90) progress = 90;
+            progress += Math.random() * 8 + 2;
+            if (progress > 95) progress = 95; // Keep at 95% until API returns
             
             if (progressFill) progressFill.style.width = `${progress}%`;
             if (progressPercent) progressPercent.textContent = `${Math.floor(progress)}%`;
             
-            const stageIndex = Math.min(Math.floor(progress / 25), stages.length - 1);
+            const stageIndex = Math.min(Math.floor(progress / 20), stages.length - 1);
+            const progressText = document.getElementById('progressText');
             if (progressText && stages[stageIndex]) {
-                progressText.textContent = stages[stageIndex];
+                progressText.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${stages[stageIndex]}`;
             }
             
             this.progressInterval = interval;
-        }, 200);
+        }, 300);
     }
 
     hideLoading() {
@@ -167,37 +177,55 @@ class SEOVisionPro {
             clearInterval(this.progressInterval);
         }
         
+        // Complete progress bar
+        const progressFill = document.getElementById('progressFill');
+        const progressPercent = document.getElementById('progressPercent');
+        if (progressFill) progressFill.style.width = '100%';
+        if (progressPercent) progressPercent.textContent = '100%';
+        
         setTimeout(() => {
             if (loading) loading.style.display = 'none';
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-satellite-dish"></i><span>INITIATE SCAN</span><div class="btn-pulse"></div>';
+                btn.innerHTML = '<i class="fas fa-satellite-dish"></i> INITIATE SCAN';
             }
         }, 500);
     }
 
-    displayResults(data) {
-        console.log('Displaying results:', data);
+    displayRealResults(data) {
+        console.log('Displaying REAL results:', data);
         
         this.hideLoading();
         
         const dashboard = document.getElementById('dashboard');
         if (dashboard) {
             dashboard.style.display = 'block';
-            dashboard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setTimeout(() => {
+                dashboard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
         }
         
         // Update timestamp
-        const timestamp = new Date().toLocaleString();
-        const timestampEl = document.getElementById('timestamp');
-        if (timestampEl) timestampEl.textContent = timestamp;
+        const timestamp = new Date().toLocaleString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        this.updateElement('timestamp', timestamp);
         
-        // Update scores
+        // Show real analysis badge
+        const realBadge = document.getElementById('realBadge') || this.createRealBadge();
+        
+        // Update scores with animation
         if (data.scores) {
-            this.updateElement('techScore', data.scores.technical);
-            this.updateElement('contentScore', data.scores.content);
-            this.updateElement('authorityScore', data.scores.authority);
-            this.updateElement('overallScore', data.scores.overall);
+            this.animateCounter('techScore', data.scores.technical, 0, 1000);
+            this.animateCounter('contentScore', data.scores.content, 0, 1000);
+            this.animateCounter('authorityScore', data.scores.authority, 0, 1000);
+            this.animateCounter('overallScore', data.scores.overall, 0, 1000);
             
             this.applyScoreColor('techScore', data.scores.technical);
             this.applyScoreColor('contentScore', data.scores.content);
@@ -207,49 +235,82 @@ class SEOVisionPro {
         
         // Update metrics
         if (data.metrics) {
-            this.updateElement('wordCount', `${data.metrics.word_count} words`);
-            this.updateElement('pageTitle', data.metrics.title || 'No title');
-            this.updateElement('metaDescription', data.metrics.meta_description || 'No description');
+            this.updateElement('wordCount', `${data.metrics.word_count.toLocaleString()} words`);
+            this.updateElement('sentenceCount', `${data.metrics.sentence_count} sentences`);
+            this.updateElement('pageTitle', data.metrics.title);
+            this.updateElement('titleLength', `${data.metrics.title_length} chars`);
+            this.updateElement('metaDescription', data.metrics.meta_description);
+            this.updateElement('metaDescLength', `${data.metrics.meta_description_length} chars`);
             this.updateElement('h1Count', data.metrics.h1_count);
             this.updateElement('h2Count', data.metrics.h2_count);
-            this.updateElement('imagesTotal', data.metrics.images_total);
-            this.updateElement('imagesWithAlt', data.metrics.images_with_alt);
+            this.updateElement('imagesTotal', `${data.metrics.images_total} images`);
+            this.updateElement('imagesWithAlt', `${data.metrics.images_with_alt} with alt text`);
+            this.updateElement('imagesWithoutAlt', `${data.metrics.images_without_alt} missing alt`);
             this.updateElement('internalLinks', data.metrics.internal_links);
             this.updateElement('externalLinks', data.metrics.external_links);
             this.updateElement('pageSize', `${data.metrics.page_size_kb} KB`);
+            this.updateElement('loadTime', `${data.metrics.load_time_seconds}s`);
+            this.updateElement('responseCode', data.metrics.response_code);
+            
+            // Update boolean indicators
+            this.updateBoolean('hasViewport', data.metrics.has_viewport);
+            this.updateBoolean('hasCanonical', data.metrics.has_canonical);
+            this.updateBoolean('hasOgTags', data.metrics.has_og_tags);
+            this.updateBoolean('hasTwitterCard', data.metrics.has_twitter_card);
+            this.updateBoolean('hasSchema', data.metrics.has_schema_markup);
         }
         
-        // Update issues
-        const issuesList = document.getElementById('issuesList');
-        if (issuesList) {
-            issuesList.innerHTML = '';
-            
-            if (data.issues && data.issues.length > 0) {
+        // Display top keywords
+        if (data.top_keywords && data.top_keywords.length > 0) {
+            const keywordsContainer = document.getElementById('topKeywords');
+            if (keywordsContainer) {
+                keywordsContainer.innerHTML = '';
+                data.top_keywords.slice(0, 8).forEach(kw => {
+                    const badge = document.createElement('span');
+                    badge.className = 'keyword-badge';
+                    badge.textContent = `${kw.keyword} (${kw.frequency})`;
+                    keywordsContainer.appendChild(badge);
+                });
+            }
+        }
+        
+        // Display issues
+        if (data.issues && data.issues.length > 0) {
+            const issuesList = document.getElementById('issuesList');
+            if (issuesList) {
+                issuesList.innerHTML = '';
                 data.issues.forEach(issue => {
                     const li = document.createElement('li');
                     li.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${issue}`;
                     issuesList.appendChild(li);
                 });
-            } else {
-                issuesList.innerHTML = '<li style="color:#00ff9d"><i class="fas fa-check-circle"></i> No critical issues found</li>';
             }
+        } else {
+            this.updateElement('issuesList', '<li style="color:#00ff9d"><i class="fas fa-check-circle"></i> No critical issues found!</li>');
         }
         
-        // Update recommendations
-        const recommendationsList = document.getElementById('recommendationsList');
-        if (recommendationsList) {
-            recommendationsList.innerHTML = '';
-            
-            if (data.recommendations && data.recommendations.length > 0) {
+        // Display recommendations
+        if (data.recommendations && data.recommendations.length > 0) {
+            const recList = document.getElementById('recommendationsList');
+            if (recList) {
+                recList.innerHTML = '';
                 data.recommendations.forEach(rec => {
                     const li = document.createElement('li');
                     li.innerHTML = `<i class="fas fa-lightbulb"></i> ${rec}`;
-                    recommendationsList.appendChild(li);
+                    recList.appendChild(li);
                 });
             }
         }
         
-        this.showNotification('✅ SEO audit completed!', 'success');
+        // Show technical details if available
+        if (data.technical_details) {
+            this.updateElement('finalUrl', data.technical_details.final_url);
+            this.updateElement('redirectCount', data.technical_details.redirect_count);
+        }
+        
+        // Show success notification
+        const analysisTime = data.analysis_time ? `in ${data.analysis_time}s` : '';
+        this.showNotification(`✅ Real SEO analysis complete ${analysisTime}!`, 'success');
     }
 
     updateElement(id, value) {
@@ -257,17 +318,65 @@ class SEOVisionPro {
         if (element) element.textContent = value;
     }
 
+    updateBoolean(id, value) {
+        const element = document.getElementById(id);
+        if (element) {
+            element.innerHTML = value ? 
+                '<i class="fas fa-check-circle" style="color:#00ff9d"></i> Yes' : 
+                '<i class="fas fa-times-circle" style="color:#ff4444"></i> No';
+        }
+    }
+
+    animateCounter(elementId, target, current, duration) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+        
+        const increment = target / (duration / 16);
+        const update = () => {
+            current += increment;
+            if (current >= target) {
+                element.textContent = target;
+                return;
+            }
+            element.textContent = Math.floor(current);
+            requestAnimationFrame(update);
+        };
+        update();
+    }
+
     applyScoreColor(elementId, score) {
         const element = document.getElementById(elementId);
         if (!element) return;
         
-        if (score >= 80) {
-            element.style.color = '#00ff9d';
-        } else if (score >= 60) {
-            element.style.color = '#ffd700';
-        } else {
-            element.style.color = '#ff4444';
+        if (score >= 80) element.style.color = '#00ff9d';
+        else if (score >= 60) element.style.color = '#ffd700';
+        else element.style.color = '#ff4444';
+    }
+
+    createRealBadge() {
+        const badge = document.createElement('div');
+        badge.id = 'realBadge';
+        badge.style.cssText = `
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #00ff9d, #00f3ff);
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 100;
+        `;
+        badge.textContent = 'REAL ANALYSIS';
+        
+        const dashboard = document.getElementById('dashboard');
+        if (dashboard) {
+            dashboard.style.position = 'relative';
+            dashboard.appendChild(badge);
         }
+        
+        return badge;
     }
 
     resetAudit() {
@@ -280,15 +389,18 @@ class SEOVisionPro {
         const btn = document.getElementById('auditButton');
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-satellite-dish"></i><span>INITIATE SCAN</span><div class="btn-pulse"></div>';
+            btn.innerHTML = '<i class="fas fa-satellite-dish"></i> INITIATE SCAN';
         }
         
-        this.showNotification('Ready for new audit', 'info');
+        this.showNotification('Ready for new analysis', 'info');
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    exportReport() {
+        this.showNotification('Export feature coming soon!', 'info');
+    }
+
     showNotification(message, type = 'info') {
-        // Remove existing
         const existing = document.querySelector('.notification');
         if (existing) existing.remove();
         
@@ -323,9 +435,9 @@ class SEOVisionPro {
     }
 }
 
-// Add notification styles
-const style = document.createElement('style');
-style.textContent = `
+// Add styles for real analysis
+const realAnalysisStyles = document.createElement('style');
+realAnalysisStyles.textContent = `
     .notification {
         position: fixed;
         top: 20px;
@@ -359,71 +471,4 @@ style.textContent = `
     }
     
     .notification.info {
-        border-left: 4px solid #00f3ff;
-    }
-    
-    .notification.warning {
-        border-left: 4px solid #ffd700;
-    }
-    
-    .notification i:first-child {
-        font-size: 1.2rem;
-    }
-    
-    .notification.success i:first-child {
-        color: #00ff9d;
-    }
-    
-    .notification.error i:first-child {
-        color: #ff4444;
-    }
-    
-    .notification.info i:first-child {
-        color: #00f3ff;
-    }
-    
-    .notification.warning i:first-child {
-        color: #ffd700;
-    }
-    
-    .notification span {
-        flex: 1;
-        font-size: 0.9rem;
-    }
-    
-    .notification-close {
-        background: none;
-        border: none;
-        color: rgba(255, 255, 255, 0.5);
-        cursor: pointer;
-        padding: 5px;
-        border-radius: 4px;
-        transition: all 0.2s ease;
-    }
-    
-    .notification-close:hover {
-        color: white;
-        background: rgba(255, 255, 255, 0.1);
-    }
-    
-    .shake {
-        animation: shake 0.5s ease;
-    }
-    
-    @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        25% { transform: translateX(-5px); }
-        75% { transform: translateX(5px); }
-    }
-`;
-document.head.appendChild(style);
-
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    try {
-        window.seoVisionPro = new SEOVisionPro();
-        console.log('✅ SEO Vision Pro Ready!');
-    } catch (error) {
-        console.error('❌ Failed to initialize:', error);
-    }
-});
+        border
