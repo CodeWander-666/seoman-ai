@@ -1,131 +1,180 @@
-<!-- Results Dashboard -->
-<div id="dashboard" class="dashboard" style="display: none;">
-    <!-- Score Overview -->
-    <section class="score-overview glass">
-        <div class="score-header">
-            <h2><i class="fas fa-chart-pie"></i> SEO SCORE OVERVIEW</h2>
-            <div class="score-timestamp" id="timestamp"></div>
-        </div>
-        <div class="score-grid">
-            <div class="score-card technical">
-                <div class="score-icon"><i class="fas fa-cogs"></i></div>
-                <div class="score-content">
-                    <h3>TECHNICAL</h3>
-                    <div class="score-value" id="techScore">--</div>
-                    <div class="score-label">Performance • Structure</div>
-                </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO Vision Pro | Real SEO Analysis</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-search"></i>
+                <h1>SEO Vision Pro</h1>
             </div>
-            <div class="score-card content">
-                <div class="score-icon"><i class="fas fa-file-alt"></i></div>
-                <div class="score-content">
-                    <h3>CONTENT</h3>
-                    <div class="score-value" id="contentScore">--</div>
-                    <div class="score-label">Quality • Relevance</div>
-                </div>
-            </div>
-            <div class="score-card authority">
-                <div class="score-icon"><i class="fas fa-medal"></i></div>
-                <div class="score-content">
-                    <h3>AUTHORITY</h3>
-                    <div class="score-value" id="authorityScore">--</div>
-                    <div class="score-label">Trust • Links</div>
-                </div>
-            </div>
-            <div class="score-card overall">
-                <div class="score-icon"><i class="fas fa-star"></i></div>
-                <div class="score-content">
-                    <h3>OVERALL</h3>
-                    <div class="score-value" id="overallScore">--</div>
-                    <div class="score-label">Composite SEO Health</div>
-                </div>
-            </div>
-        </div>
-    </section>
+            <p class="tagline">Real SEO Analysis - No Fake Data</p>
+        </header>
 
-    <!-- Metrics Section -->
-    <section class="audit-section glass">
-        <h2><i class="fas fa-chart-bar"></i> PAGE METRICS</h2>
-        <div class="audit-grid">
-            <div class="audit-card">
-                <h3><i class="fas fa-file-alt"></i> CONTENT</h3>
-                <div class="metric">
-                    <div class="metric-label">Word Count:</div>
-                    <div class="metric-value" id="wordCount">--</div>
+        <!-- Main Content -->
+        <main>
+            <!-- Input Section -->
+            <section class="input-section">
+                <h2><i class="fas fa-globe"></i> Enter Website URL</h2>
+                <div class="input-group">
+                    <input type="url" id="urlInput" placeholder="https://example.com" value="https://example.com">
+                    <button id="auditButton" class="btn">
+                        <i class="fas fa-play"></i> Start SEO Analysis
+                    </button>
                 </div>
-                <div class="metric">
-                    <div class="metric-label">Page Title:</div>
-                    <div class="metric-value small" id="pageTitle">--</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-label">Meta Description:</div>
-                    <div class="metric-value small" id="metaDescription">--</div>
-                </div>
-            </div>
-            <div class="audit-card">
-                <h3><i class="fas fa-sitemap"></i> STRUCTURE</h3>
-                <div class="metric">
-                    <div class="metric-label">H1 Tags:</div>
-                    <div class="metric-value" id="h1Count">--</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-label">H2 Tags:</div>
-                    <div class="metric-value" id="h2Count">--</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-label">Images (with alt):</div>
-                    <div class="metric-value" id="imagesWithAlt">--</div>
-                </div>
-            </div>
-            <div class="audit-card">
-                <h3><i class="fas fa-link"></i> LINKS</h3>
-                <div class="metric">
-                    <div class="metric-label">Internal Links:</div>
-                    <div class="metric-value" id="internalLinks">--</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-label">External Links:</div>
-                    <div class="metric-value" id="externalLinks">--</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-label">Page Size:</div>
-                    <div class="metric-value" id="pageSize">--</div>
-                </div>
-            </div>
-        </div>
-    </section>
+                <p class="hint">Enter any website URL starting with http:// or https://</p>
+            </section>
 
-    <!-- Issues & Recommendations -->
-    <section class="audit-section glass">
-        <div class="issues-recommendations">
-            <div class="issues">
-                <h3><i class="fas fa-exclamation-triangle"></i> DETECTED ISSUES</h3>
-                <ul id="issuesList">
-                    <li><i class="fas fa-spinner fa-spin"></i> Analyzing...</li>
-                </ul>
+            <!-- Loading State -->
+            <div id="loading" class="loading" style="display: none;">
+                <div class="loader">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <h3>Analyzing Website...</h3>
+                    <p id="progressText">Fetching website data</p>
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                    <p id="progressPercent">0%</p>
+                </div>
             </div>
-            <div class="recommendations">
-                <h3><i class="fas fa-lightbulb"></i> RECOMMENDATIONS</h3>
-                <ul id="recommendationsList">
-                    <li><i class="fas fa-spinner fa-spin"></i> Generating...</li>
-                </ul>
-            </div>
-        </div>
-    </section>
 
-    <!-- Export & Actions -->
-    <section class="actions-section glass">
-        <h2><i class="fas fa-download"></i> EXPORT & ACTIONS</h2>
-        <div class="action-buttons">
-            <button class="action-btn" id="exportPDF">
-                <i class="fas fa-file-pdf"></i> Export Report
-            </button>
-            <button class="action-btn" id="newAudit">
-                <i class="fas fa-redo"></i> New Audit
-            </button>
-        </div>
-        <div class="free-plan-notice">
-            <i class="fas fa-info-circle"></i>
-            <p>Free Plan: Basic metrics only • Results cached for 5 minutes</p>
-        </div>
-    </section>
-</div>
+            <!-- Results Dashboard -->
+            <div id="dashboard" class="dashboard" style="display: none;">
+                <!-- Score Overview -->
+                <section class="score-section">
+                    <h2><i class="fas fa-chart-line"></i> SEO Scores</h2>
+                    <div class="score-grid">
+                        <div class="score-card">
+                            <div class="score-header">
+                                <i class="fas fa-cogs"></i>
+                                <h3>Technical</h3>
+                            </div>
+                            <div class="score-value" id="techScore">--</div>
+                            <div class="score-label">Performance & Structure</div>
+                        </div>
+                        <div class="score-card">
+                            <div class="score-header">
+                                <i class="fas fa-file-alt"></i>
+                                <h3>Content</h3>
+                            </div>
+                            <div class="score-value" id="contentScore">--</div>
+                            <div class="score-label">Quality & Relevance</div>
+                        </div>
+                        <div class="score-card">
+                            <div class="score-header">
+                                <i class="fas fa-medal"></i>
+                                <h3>Authority</h3>
+                            </div>
+                            <div class="score-value" id="authorityScore">--</div>
+                            <div class="score-label">Trust & Links</div>
+                        </div>
+                        <div class="score-card">
+                            <div class="score-header">
+                                <i class="fas fa-star"></i>
+                                <h3>Overall</h3>
+                            </div>
+                            <div class="score-value" id="overallScore">--</div>
+                            <div class="score-label">Total SEO Health</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Metrics -->
+                <section class="metrics-section">
+                    <h2><i class="fas fa-chart-bar"></i> Page Metrics</h2>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <h3><i class="fas fa-text-height"></i> Content</h3>
+                            <div class="metric">
+                                <span>Word Count:</span>
+                                <strong id="wordCount">--</strong>
+                            </div>
+                            <div class="metric">
+                                <span>Page Title:</span>
+                                <span id="pageTitle" class="small">--</span>
+                            </div>
+                            <div class="metric">
+                                <span>Meta Description:</span>
+                                <span id="metaDescription" class="small">--</span>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <h3><i class="fas fa-sitemap"></i> Structure</h3>
+                            <div class="metric">
+                                <span>H1 Tags:</span>
+                                <strong id="h1Count">--</strong>
+                            </div>
+                            <div class="metric">
+                                <span>H2 Tags:</span>
+                                <strong id="h2Count">--</strong>
+                            </div>
+                            <div class="metric">
+                                <span>Images (with alt):</span>
+                                <strong id="imagesWithAlt">--</strong>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <h3><i class="fas fa-link"></i> Links & Performance</h3>
+                            <div class="metric">
+                                <span>Internal Links:</span>
+                                <strong id="internalLinks">--</strong>
+                            </div>
+                            <div class="metric">
+                                <span>External Links:</span>
+                                <strong id="externalLinks">--</strong>
+                            </div>
+                            <div class="metric">
+                                <span>Page Size:</span>
+                                <strong id="pageSize">--</strong>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Issues & Recommendations -->
+                <section class="issues-section">
+                    <div class="issues-recommendations">
+                        <div class="issues">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Issues Found</h3>
+                            <ul id="issuesList">
+                                <li>Complete analysis to see issues</li>
+                            </ul>
+                        </div>
+                        <div class="recommendations">
+                            <h3><i class="fas fa-lightbulb"></i> Recommendations</h3>
+                            <ul id="recommendationsList">
+                                <li>Complete analysis for recommendations</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Actions -->
+                <section class="actions-section">
+                    <button id="newAudit" class="btn secondary">
+                        <i class="fas fa-redo"></i> New Analysis
+                    </button>
+                    <button class="btn">
+                        <i class="fas fa-download"></i> Export Report
+                    </button>
+                </section>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer>
+            <p>SEO Vision Pro &copy; 2024 | Real SEO Analysis Tool</p>
+            <p class="small">Analyzes actual website data - No fake results</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
