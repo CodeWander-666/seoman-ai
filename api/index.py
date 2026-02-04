@@ -55,7 +55,7 @@ class EnterpriseIntelligence:
         }
 
 # ==============================================================================
-# 🔌 CLASS 2: API CONNECTOR (The Multi-Model Fix)
+# 🔌 CLASS 2: API CONNECTOR (Using Official Google Library)
 # ==============================================================================
 class APIConnector:
     # --- 1. SCRAPING ---
@@ -137,56 +137,40 @@ class APIConnector:
         d = resp.json()['response'][0]
         return { "page_rank": d['page_rank_decimal'] or 0, "rank": d['rank'], "domain": d['domain'] }
 
-    # --- 4. AI ADVISOR (THE SKELETON KEY FIX) ---
+    # --- 4. AI ADVISOR (USING OFFICIAL SDK) ---
     @staticmethod
     def get_ai_advice(seo_data, api_key):
         """
-        Iterates through EVERY available Gemini model until one works.
+        Uses the OFFICIAL Google Client Library (like the video).
+        This automatically handles URL versions and model finding.
         """
         if not api_key: return "AI BRAIN: OFFLINE (Missing GEMINI_API_KEY)"
         
-        import requests
-        
-        # ⚡ THE FIX: A prioritized list of every possible model name
-        # We try them one by one. The moment one works, we return.
-        possible_models = [
-            "gemini-1.5-flash",         # Current Standard
-            "gemini-1.5-pro",           # High End
-            "gemini-1.0-pro",           # Legacy Stable
-            "gemini-pro",               # Old Legacy
-            "gemini-1.5-flash-latest"   # Experimental
-        ]
-        
-        stats = f"Speed:{seo_data.get('technical',{}).get('speed_score')}, Traffic:{seo_data.get('enterprise',{}).get('search_console_projection',{}).get('est_monthly_traffic')}"
-        prompt = f"You are a Senior SEO Auditor. Based on these site stats: [{stats}], provide ONE specific, high-impact technical recommendation. Keep it under 20 words."
-        payload = {"contents": [{"parts": [{"text": prompt}]}]}
+        try:
+            # 1. Import Official Library
+            import google.generativeai as genai
+            
+            # 2. Configure Key
+            genai.configure(api_key=api_key)
+            
+            # 3. Construct Prompt
+            stats = f"Speed:{seo_data.get('technical',{}).get('speed_score')}, Traffic:{seo_data.get('enterprise',{}).get('search_console_projection',{}).get('est_monthly_traffic')}"
+            prompt = f"You are a Senior SEO Auditor. Based on these site stats: [{stats}], provide ONE specific, high-impact technical recommendation. Keep it under 20 words."
 
-        last_error = "No models available"
-
-        for model in possible_models:
+            # 4. Generate (Try Flash first, then Pro)
             try:
-                # We use v1beta as it supports the most models
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
-                
-                resp = requests.post(url, json=payload, timeout=8)
-                
-                # If ANY model works, return immediately
-                if resp.status_code == 200:
-                    return resp.json()['candidates'][0]['content']['parts'][0]['text']
-                
-                # If fail, log error and try next
-                try: 
-                    last_error = f"{model}: {resp.json()['error']['message'][:20]}"
-                except: 
-                    last_error = f"{model}: HTTP {resp.status_code}"
-                    
-            except Exception as e:
-                last_error = f"{model} Crash: {str(e)[:15]}"
-                continue
+                model = genai.GenerativeModel('gemini-1.5-flash')
+                response = model.generate_content(prompt)
+                return response.text
+            except:
+                # Fallback to Pro (The standard model)
+                model = genai.GenerativeModel('gemini-pro')
+                response = model.generate_content(prompt)
+                return response.text
 
-        # If we get here, EVERY model failed.
-        # This confirms the API Key itself is invalid or has no services enabled.
-        return f"ALL MODELS FAILED. Last error: {last_error}"
+        except Exception as e:
+            # If the library crashes, it usually means the key is invalid
+            return f"SDK Error: {str(e)[:30]}..."
 
 # ==============================================================================
 # 🛡️ CLASS 3: SELF REPAIR
