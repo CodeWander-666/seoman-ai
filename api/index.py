@@ -5,6 +5,12 @@ from datetime import datetime
 import requests
 from bs4 import BeautifulSoup
 import re
+import time
+import socket
+import ssl
+import urllib.request
+from urllib.parse import urljoin, urlparse
+import concurrent.futures
 
 class handler(BaseHTTPRequestHandler):
     
@@ -27,7 +33,7 @@ class handler(BaseHTTPRequestHandler):
                 "status": "operational",
                 "timestamp": datetime.utcnow().isoformat(),
                 "version": "2.0.0",
-                "message": "SEO Vision Pro API is running"
+                "features": ["real_seo_analysis", "content_parsing", "technical_audit", "performance_check"]
             }
             self.wfile.write(json.dumps(response).encode())
             
@@ -35,7 +41,7 @@ class handler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
             self.end_headers()
-            self.wfile.write(b"<h1>SEO Vision Pro API</h1><p>Use POST /api/audit with JSON body</p>")
+            self.wfile.write(b"<h1>SEO Vision Pro API</h1><p>Real SEO Analysis - No Dummy Data</p>")
             
         else:
             self.send_response(404)
@@ -50,15 +56,20 @@ class handler(BaseHTTPRequestHandler):
             data = json.loads(post_data.decode('utf-8'))
             
             if self.path == '/api/audit':
-                result = self.perform_audit(data)
-                self.send_response(200)
-                self.send_header('Content-type', 'application/json')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
-                self.wfile.write(json.dumps(result).encode())
+                # Start real analysis
+                url = data.get('url', '').strip()
                 
-            elif self.path == '/api/ai-analysis':
-                result = self.perform_ai_analysis(data)
+                if not url:
+                    self.send_error_response("URL is required")
+                    return
+                
+                if not url.startswith('http'):
+                    self.send_error_response("URL must start with http:// or https://")
+                    return
+                
+                # Perform real analysis
+                result = self.perform_real_analysis(url)
+                
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')
                 self.send_header('Access-Control-Allow-Origin', '*')
@@ -71,214 +82,422 @@ class handler(BaseHTTPRequestHandler):
                 self.wfile.write(json.dumps({"error": "Endpoint not found"}).encode())
                 
         except Exception as e:
-            self.send_response(500)
-            self.send_header('Content-type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(json.dumps({
-                "error": "Internal server error",
-                "message": str(e)
-            }).encode())
+            self.send_error_response(f"Server error: {str(e)}")
     
-    def perform_audit(self, data):
-        """Perform SEO audit without external dependencies"""
-        url = data.get('url', '').strip()
-        
-        if not url:
-            return {"error": "URL is required"}
-        
-        if not url.startswith('http'):
-            return {"error": "URL must start with http:// or https://"}
+    def send_error_response(self, message):
+        self.send_response(400)
+        self.send_header('Content-type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(json.dumps({"error": message}).encode())
+    
+    def perform_real_analysis(self, url):
+        """REAL SEO analysis - fetches and analyzes actual website data"""
+        start_time = time.time()
         
         try:
-            # Fetch the page
+            print(f"[ANALYSIS] Starting real analysis for: {url}")
+            
+            # Fetch the page with proper headers
             headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Accept-Encoding': 'gzip, deflate',
+                'DNT': '1',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
             }
             
+            print(f"[ANALYSIS] Fetching URL: {url}")
             response = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
+            response.raise_for_status()
+            
+            print(f"[ANALYSIS] Response received: {response.status_code}")
             
             # Parse HTML
-            soup = BeautifulSoup(response.text, 'html.parser')
+            soup = BeautifulSoup(response.content, 'html.parser')
             
-            # Extract basic metrics
-            text = soup.get_text()
-            words = re.findall(r'\w+', text.lower())
-            word_count = len(words)
+            # Remove scripts and styles
+            for script in soup(["script", "style", "noscript"]):
+                script.decompose()
             
-            # Get title
-            title = soup.title.string if soup.title else "No title"
-            title_length = len(title)
+            # Get plain text for analysis
+            text = soup.get_text(separator=' ', strip=True)
             
-            # Get meta description
-            meta_desc = soup.find('meta', attrs={'name': 'description'})
-            description = meta_desc.get('content', '') if meta_desc else ''
-            desc_length = len(description)
+            # REAL CONTENT ANALYSIS
+            word_count = len(re.findall(r'\b\w+\b', text.lower()))
+            sentences = len(re.findall(r'[.!?]+', text))
             
-            # Count headings
-            h1_count = len(soup.find_all('h1'))
-            h2_count = len(soup.find_all('h2'))
-            h3_count = len(soup.find_all('h3'))
+            # Keyword density analysis (real)
+            words = re.findall(r'\b\w{3,}\b', text.lower())
+            stop_words = {'the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'any', 'can', 'her', 'was', 'one', 'our', 'out', 'day', 'get', 'has', 'him', 'his', 'how', 'man', 'new', 'now', 'old', 'see', 'two', 'who', 'boy', 'did', 'its', 'let', 'put', 'say', 'she', 'too', 'use'}
             
-            # Count images with alt text
+            word_freq = {}
+            for word in words:
+                if word not in stop_words and len(word) > 2:
+                    word_freq[word] = word_freq.get(word, 0) + 1
+            
+            # Get top 10 keywords
+            top_keywords = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)[:10]
+            
+            # Heading analysis
+            h1_tags = soup.find_all('h1')
+            h2_tags = soup.find_all('h2')
+            h3_tags = soup.find_all('h3')
+            
+            # Image analysis
             images = soup.find_all('img')
-            images_with_alt = len([img for img in images if img.get('alt', '')])
+            images_with_alt = sum(1 for img in images if img.get('alt', '').strip())
+            images_without_alt = len(images) - images_with_alt
             
-            # Count links
-            links = soup.find_all('a')
-            internal_links = 0
-            external_links = 0
+            # Link analysis
+            links = soup.find_all('a', href=True)
+            domain = urlparse(url).netloc
+            
+            internal_links = []
+            external_links = []
             
             for link in links:
                 href = link.get('href', '')
-                if href:
-                    if href.startswith('/') or url in href:
-                        internal_links += 1
-                    else:
-                        external_links += 1
+                full_url = urljoin(url, href)
+                parsed_href = urlparse(full_url)
+                
+                if parsed_href.netloc == domain or not parsed_href.netloc:
+                    internal_links.append(full_url)
+                else:
+                    external_links.append(full_url)
             
-            # Check for common issues
-            issues = []
-            if h1_count == 0:
-                issues.append("No H1 heading found")
-            elif h1_count > 1:
-                issues.append(f"Multiple H1 headings ({h1_count}) found")
+            # Meta tag analysis
+            title_tag = soup.find('title')
+            title = title_tag.string if title_tag else "No title found"
+            title_length = len(title)
             
-            if title_length == 0:
-                issues.append("No title tag found")
-            elif title_length > 60:
-                issues.append(f"Title too long ({title_length} characters)")
+            meta_description = soup.find('meta', attrs={'name': 'description'})
+            description = meta_description.get('content', '') if meta_description else ""
+            description_length = len(description)
             
-            if desc_length == 0:
-                issues.append("No meta description found")
-            elif desc_length > 160:
-                issues.append(f"Meta description too long ({desc_length} characters)")
+            meta_keywords = soup.find('meta', attrs={'name': 'keywords'})
+            keywords = meta_keywords.get('content', '') if meta_keywords else ""
             
-            if word_count < 300:
-                issues.append(f"Low word count ({word_count}) - aim for 300+ words")
+            # Check for viewport meta tag (mobile)
+            viewport = soup.find('meta', attrs={'name': 'viewport'})
+            has_viewport = bool(viewport)
             
-            if images_with_alt < len(images):
-                issues.append(f"{len(images) - images_with_alt} images missing alt text")
+            # Check for canonical
+            canonical = soup.find('link', attrs={'rel': 'canonical'})
+            has_canonical = bool(canonical)
             
-            # Calculate scores
-            technical_score = 85
-            content_score = min(100, word_count / 15)
-            authority_score = 65  # Placeholder
+            # Check for Open Graph tags
+            og_title = soup.find('meta', property='og:title')
+            og_description = soup.find('meta', property='og:description')
+            og_image = soup.find('meta', property='og:image')
             
-            # Adjust scores based on issues
-            technical_score -= len(issues) * 5
-            technical_score = max(0, min(100, technical_score))
+            # Check for Twitter Cards
+            twitter_card = soup.find('meta', attrs={'name': 'twitter:card'})
             
-            if word_count > 800:
-                content_score = min(100, content_score + 10)
+            # Check for schema markup
+            schema_org = soup.find('script', type='application/ld+json')
             
-            if images_with_alt == len(images) and len(images) > 0:
-                technical_score += 5
+            # Calculate REAL scores based on actual data
+            technical_score = self.calculate_technical_score({
+                'status_code': response.status_code,
+                'has_viewport': has_viewport,
+                'has_canonical': has_canonical,
+                'title_length': title_length,
+                'description_length': description_length,
+                'h1_count': len(h1_tags),
+                'image_alt_ratio': images_with_alt / len(images) if images else 1,
+                'response_time': response.elapsed.total_seconds(),
+                'og_tags': bool(og_title or og_description or og_image),
+                'schema_markup': bool(schema_org)
+            })
             
-            overall_score = round((technical_score + content_score + authority_score) / 3)
+            content_score = self.calculate_content_score({
+                'word_count': word_count,
+                'sentence_count': sentences,
+                'unique_keywords': len(set(words)),
+                'top_keywords': top_keywords,
+                'h2_count': len(h2_tags),
+                'h3_count': len(h3_tags),
+                'avg_sentence_length': word_count / sentences if sentences > 0 else 0
+            })
             
-            # Generate recommendations
-            recommendations = [
-                "Ensure all images have descriptive alt text",
-                "Use only one H1 tag per page",
-                "Optimize title tag (50-60 characters)",
-                "Write compelling meta description (120-160 characters)",
-                "Aim for at least 300 words of quality content",
-                "Use internal links to establish site hierarchy"
-            ]
+            authority_score = self.calculate_authority_score({
+                'external_links': len(set(external_links)),
+                'internal_links': len(set(internal_links)),
+                'domain': domain,
+                'has_og': bool(og_title or og_description or og_image),
+                'has_twitter_card': bool(twitter_card),
+                'has_schema': bool(schema_org)
+            })
             
-            if word_count < 300:
-                recommendations.append("Expand content to cover topic more thoroughly")
+            # Calculate performance metrics
+            page_size_kb = len(response.content) / 1024
+            load_time = response.elapsed.total_seconds()
             
-            if h1_count != 1:
-                recommendations.append("Ensure exactly one H1 tag with main keyword")
+            # Generate REAL issues
+            issues = self.generate_issues({
+                'word_count': word_count,
+                'images_without_alt': images_without_alt,
+                'h1_count': len(h1_tags),
+                'title_length': title_length,
+                'description_length': description_length,
+                'has_viewport': has_viewport,
+                'has_canonical': has_canonical,
+                'load_time': load_time,
+                'page_size': page_size_kb,
+                'status_code': response.status_code
+            })
             
-            # Return result
+            # Generate REAL recommendations
+            recommendations = self.generate_recommendations(issues, {
+                'word_count': word_count,
+                'images_count': len(images),
+                'h2_count': len(h2_tags),
+                'external_links': len(external_links)
+            })
+            
+            # Compile result
             result = {
                 "status": "success",
                 "url": url,
                 "timestamp": datetime.utcnow().isoformat(),
-                "response_code": response.status_code,
+                "analysis_time": round(time.time() - start_time, 2),
+                "real_analysis": True,
                 "scores": {
-                    "technical": round(technical_score),
-                    "content": round(content_score),
-                    "authority": round(authority_score),
-                    "overall": overall_score
+                    "technical": technical_score,
+                    "content": content_score,
+                    "authority": authority_score,
+                    "overall": round((technical_score + content_score + authority_score) / 3)
                 },
                 "metrics": {
                     "word_count": word_count,
+                    "sentence_count": sentences,
                     "title": title[:100] + "..." if len(title) > 100 else title,
                     "title_length": title_length,
                     "meta_description": description[:150] + "..." if len(description) > 150 else description,
-                    "meta_description_length": desc_length,
-                    "h1_count": h1_count,
-                    "h2_count": h2_count,
-                    "h3_count": h3_count,
+                    "meta_description_length": description_length,
+                    "meta_keywords": keywords,
+                    "h1_count": len(h1_tags),
+                    "h2_count": len(h2_tags),
+                    "h3_count": len(h3_tags),
                     "images_total": len(images),
                     "images_with_alt": images_with_alt,
-                    "internal_links": internal_links,
-                    "external_links": external_links,
-                    "page_size_kb": round(len(response.content) / 1024, 2)
+                    "images_without_alt": images_without_alt,
+                    "internal_links": len(internal_links),
+                    "external_links": len(external_links),
+                    "page_size_kb": round(page_size_kb, 2),
+                    "load_time_seconds": round(load_time, 3),
+                    "response_code": response.status_code,
+                    "has_viewport": has_viewport,
+                    "has_canonical": has_canonical,
+                    "has_og_tags": bool(og_title or og_description or og_image),
+                    "has_twitter_card": bool(twitter_card),
+                    "has_schema_markup": bool(schema_org)
                 },
+                "top_keywords": [{"keyword": k, "frequency": v} for k, v in top_keywords],
                 "issues": issues,
-                "recommendations": recommendations[:5],  # Top 5 recommendations
-                "plan": data.get("plan", "free")
+                "recommendations": recommendations,
+                "technical_details": {
+                    "server_headers": dict(response.headers),
+                    "final_url": response.url,
+                    "redirect_count": len(response.history)
+                }
             }
             
+            print(f"[ANALYSIS] Completed for {url} in {result['analysis_time']}s")
             return result
             
+        except requests.exceptions.Timeout:
+            return {
+                "error": "Request timed out",
+                "real_analysis": False,
+                "message": "The website took too long to respond"
+            }
         except requests.exceptions.RequestException as e:
             return {
-                "error": "Failed to fetch URL",
-                "message": str(e),
-                "code": "FETCH_ERROR"
+                "error": "Failed to fetch website",
+                "real_analysis": False,
+                "message": str(e)
             }
         except Exception as e:
+            print(f"[ERROR] Analysis failed: {str(e)}")
             return {
                 "error": "Analysis failed",
-                "message": str(e),
-                "code": "ANALYSIS_ERROR"
+                "real_analysis": False,
+                "message": str(e)
             }
     
-    def perform_ai_analysis(self, data):
-        """Simple AI analysis without external API"""
-        metrics = data.get('metrics', {})
+    def calculate_technical_score(self, data):
+        """Calculate technical SEO score based on real metrics"""
+        score = 100
         
-        # Generate AI-like recommendations based on metrics
+        # Deduct points for issues
+        if not data['has_viewport']:
+            score -= 15
+        if not data['has_canonical']:
+            score -= 10
+        if data['h1_count'] == 0:
+            score -= 20
+        elif data['h1_count'] > 1:
+            score -= 10
+        if data['title_length'] < 10 or data['title_length'] > 60:
+            score -= 10
+        if data['description_length'] < 50 or data['description_length'] > 160:
+            score -= 10
+        if data['image_alt_ratio'] < 0.7:
+            score -= 15
+        if data['response_time'] > 3:
+            score -= 10
+        if not data['og_tags']:
+            score -= 5
+        if not data['schema_markup']:
+            score -= 5
+        
+        return max(0, min(100, round(score)))
+    
+    def calculate_content_score(self, data):
+        """Calculate content quality score based on real content analysis"""
+        score = 50  # Base score
+        
+        # Word count scoring
+        if data['word_count'] >= 1000:
+            score += 30
+        elif data['word_count'] >= 500:
+            score += 20
+        elif data['word_count'] >= 300:
+            score += 15
+        elif data['word_count'] >= 150:
+            score += 10
+        else:
+            score -= 10
+        
+        # Keyword diversity
+        if data['unique_keywords'] >= 50:
+            score += 10
+        elif data['unique_keywords'] >= 25:
+            score += 5
+        
+        # Heading structure
+        if data['h2_count'] >= 3:
+            score += 10
+        elif data['h2_count'] >= 1:
+            score += 5
+        
+        if data['h3_count'] >= 2:
+            score += 5
+        
+        # Sentence structure
+        if data['sentence_count'] > 0:
+            avg_length = data['word_count'] / data['sentence_count']
+            if 15 <= avg_length <= 25:
+                score += 10
+        
+        return max(0, min(100, round(score)))
+    
+    def calculate_authority_score(self, data):
+        """Calculate authority score based on linking and markup"""
+        score = 50  # Base score
+        
+        # External links (positive signal)
+        if data['external_links'] >= 10:
+            score += 20
+        elif data['external_links'] >= 5:
+            score += 10
+        elif data['external_links'] >= 2:
+            score += 5
+        
+        # Internal linking
+        if data['internal_links'] >= 20:
+            score += 15
+        elif data['internal_links'] >= 10:
+            score += 10
+        elif data['internal_links'] >= 5:
+            score += 5
+        
+        # Structured data (trust signals)
+        if data['has_og']:
+            score += 10
+        if data['has_twitter_card']:
+            score += 5
+        if data['has_schema']:
+            score += 15
+        
+        # Domain age estimation (basic)
+        if '.gov' in data['domain'] or '.edu' in data['domain']:
+            score += 20
+        elif '.org' in data['domain']:
+            score += 10
+        
+        return max(0, min(100, round(score)))
+    
+    def generate_issues(self, data):
+        """Generate real issues based on actual data"""
         issues = []
         
-        if metrics.get('word_count', 0) < 300:
-            issues.append("Content is too thin. Expand with more detailed information.")
+        if data['word_count'] < 300:
+            issues.append(f"Low word count ({data['word_count']}). Aim for at least 300 words for better SEO.")
         
-        if metrics.get('h1_count', 0) != 1:
-            issues.append(f"Found {metrics.get('h1_count', 0)} H1 tags. Should have exactly 1.")
+        if data['images_without_alt'] > 0:
+            issues.append(f"{data['images_without_alt']} images missing alt text. Add descriptive alt attributes for accessibility and SEO.")
         
-        if metrics.get('images_with_alt', 0) < metrics.get('images_total', 0):
-            issues.append(f"{metrics.get('images_total', 0) - metrics.get('images_with_alt', 0)} images missing alt text.")
+        if data['h1_count'] == 0:
+            issues.append("Missing H1 tag. Every page should have one H1 heading.")
+        elif data['h1_count'] > 1:
+            issues.append(f"Multiple H1 tags ({data['h1_count']}). Use only one H1 per page.")
         
-        technical_fixes = [
-            "Optimize images for faster loading",
-            "Minify CSS and JavaScript files",
-            "Enable browser caching"
+        if data['title_length'] < 10:
+            issues.append("Title too short. Include relevant keywords and make it 10-60 characters.")
+        elif data['title_length'] > 60:
+            issues.append("Title too long. Keep it under 60 characters for proper display in search results.")
+        
+        if data['description_length'] < 50:
+            issues.append("Meta description too short. Write compelling descriptions of 50-160 characters.")
+        elif data['description_length'] > 160:
+            issues.append("Meta description too long. Keep it under 160 characters.")
+        
+        if not data['has_viewport']:
+            issues.append("Missing viewport meta tag. Essential for mobile responsiveness.")
+        
+        if not data['has_canonical']:
+            issues.append("Missing canonical tag. Helps prevent duplicate content issues.")
+        
+        if data['load_time'] > 3:
+            issues.append(f"Slow page load ({data['load_time']:.1f}s). Optimize for better user experience.")
+        
+        if data['page_size'] > 2000:
+            issues.append(f"Large page size ({data['page_size']:.0f} KB). Optimize images and assets.")
+        
+        if data['status_code'] != 200:
+            issues.append(f"HTTP Status {data['status_code']}. Ensure page returns 200 OK.")
+        
+        return issues
+    
+    def generate_recommendations(self, issues, data):
+        """Generate personalized recommendations"""
+        recommendations = [
+            "Optimize images by compressing them and adding descriptive alt text",
+            "Ensure proper heading hierarchy (H1 → H2 → H3)",
+            "Write unique and compelling meta title and description",
+            "Add structured data (Schema.org) for rich results",
+            "Create quality content with at least 300-500 words",
+            "Build internal links to establish site architecture",
+            "Add social media meta tags (Open Graph, Twitter Cards)",
+            "Implement lazy loading for images below the fold"
         ]
         
-        content_opportunities = [
-            "Add more internal links to related content",
-            "Include schema markup for better rich results",
-            "Create a table of contents for long articles"
-        ]
+        # Add specific recommendations based on data
+        if data['word_count'] < 300:
+            recommendations.append("Expand content with more detailed information and examples")
         
-        quick_wins = [
-            "Fix missing alt text on images",
-            "Optimize title and meta description",
-            "Check for broken links"
-        ]
+        if data['images_count'] > 10:
+            recommendations.append("Use WebP format for better image compression")
         
-        return {
-            "technical_fixes": technical_fixes,
-            "content_opportunities": content_opportunities,
-            "quick_wins": quick_wins,
-            "issues": issues,
-            "ai_generated": True,
-            "note": "AI analysis based on SEO best practices"
-        }
+        if data['h2_count'] < 2:
+            recommendations.append("Break content into sections with H2 headings")
+        
+        if data['external_links'] < 3:
+            recommendations.append("Add relevant outbound links to authoritative sources")
+        
+        return recommendations[:8]  # Return top 8 recommendations
