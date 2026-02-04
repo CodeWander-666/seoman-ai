@@ -1,89 +1,79 @@
 from flask import Flask, request, jsonify, make_response
 import requests
 from bs4 import BeautifulSoup
-import textstat
 import os
 
 app = Flask(__name__)
-
-# ENV KEYS (Set these in Vercel Settings)
+# Get keys safely
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 OPR_API_KEY = os.environ.get("OPR_API_KEY")
 
-def cors_response(data):
-    resp = make_response(jsonify(data))
-    resp.headers["Access-Control-Allow-Origin"] = "*"
-    resp.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
-    return resp
-
-def get_intent(text, title):
-    # Logic from "Art of SEO": Classify intent by vocabulary
-    blob = (text + " " + title).lower()
-    if any(x in blob for x in ['buy', 'price', 'checkout', 'add to cart', 'sale']):
-        return "Transactional"
-    if any(x in blob for x in ['how to', 'guide', 'what is', 'tutorial', 'learn']):
-        return "Informational"
-    return "Navigational"
+def cors_response(data, status=200):
+    response = make_response(jsonify(data), status)
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add("Access-Control-Allow-Headers", "*")
+    response.headers.add("Access-Control-Allow-Methods", "GET, OPTIONS")
+    return response
 
 @app.route('/api/analyze', methods=['GET', 'OPTIONS'])
-def handler():
+def analyze():
     if request.method == "OPTIONS": return cors_response({"ok": True})
     
     url = request.args.get('url')
-    if not url: return cors_response({"error": "No URL"})
+    if not url: return cors_response({"error": "No URL"}, 400)
     if not url.startswith('http'): url = 'https://' + url
 
-    final_data = {}
+    output = {}
 
-    # --- 1. SCRAPE & CONTENT (Requests + BeautifulSoup) ---
+    # 1. SCRAPE (Native Python only - No Textstat)
     try:
-        headers = {'User-Agent': 'SEOAnalyzer/1.0'}
-        page = requests.get(url, headers=headers, timeout=10)
-        soup = BeautifulSoup(page.text, 'html.parser')
+        headers = {'User-Agent': 'SEO-Tool/1.0'}
+        resp = requests.get(url, headers=headers, timeout=9)
+        soup = BeautifulSoup(resp.text, 'html.parser')
         text = soup.get_text(" ", strip=True)
         
-        final_data['strategy'] = {
-            "intent": get_intent(text[:3000], soup.title.string if soup.title else ""),
-            "status": page.status_code,
-            "server": page.headers.get('Server', 'Unknown')
-        }
-        
-        final_data['content'] = {
-            "word_count": len(text.split()),
-            "readability": textstat.flesch_reading_ease(text),
+        # Simple Intent Logic
+        blob = (soup.title.string or "") + " " + text[:500]
+        intent = "Navigational"
+        if any(x in blob.lower() for x in ['buy', 'price', 'cart', 'sale']): intent = "Transactional"
+        elif any(x in blob.lower() for x in ['how', 'guide', 'tips']): intent = "Informational"
+
+        output['strategy'] = { "intent": intent, "status": resp.status_code, "server": resp.headers.get('Server','N/A') }
+        output['content'] = { 
+            "word_count": len(text.split()), 
+            "readability": "N/A (Lite Mode)", # Placeholder
             "title_len": len(soup.title.string) if soup.title else 0,
-            "description": True if soup.find('meta', attrs={'name': 'description'}) else False
+            "description": bool(soup.find('meta', attrs={'name': 'description'}))
         }
     except Exception as e:
-        final_data['strategy'] = {"error": str(e)}
-        final_data['content'] = {"error": str(e)}
+        output['strategy'] = {"error": str(e)}
+        output['content'] = {"error": str(e)}
 
-    # --- 2. TECHNICAL (Google PageSpeed API) ---
+    # 2. TECHNICAL (Google)
     try:
-        g_url = f"https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={url}&strategy=mobile&key={GOOGLE_API_KEY}"
-        g_res = requests.get(g_url).json()['lighthouseResult']
-        
-        final_data['technical'] = {
-            "speed_score": int(g_res['categories']['performance']['score'] * 100),
-            "lcp": g_res['audits']['largest-contentful-paint']['displayValue'],
-            "cls": g_res['audits']['cumulative-layout-shift']['displayValue']
-        }
+        if GOOGLE_API_KEY:
+            g_url = f"https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={url}&strategy=mobile&key={GOOGLE_API_KEY}"
+            g_data = requests.get(g_url).json().get('lighthouseResult', {})
+            output['technical'] = {
+                "speed_score": int(g_data.get('categories',{}).get('performance',{}).get('score',0)*100),
+                "lcp": g_data.get('audits',{}).get('largest-contentful-paint',{}).get('displayValue','N/A'),
+                "cls": g_data.get('audits',{}).get('cumulative-layout-shift',{}).get('displayValue','N/A')
+            }
+        else:
+            output['technical'] = {"error": "Missing Google Key"}
     except:
-        final_data['technical'] = {"speed_score": 0, "lcp": "Error", "cls": "Error"}
+        output['technical'] = {"speed_score": 0, "lcp": "Error", "cls": "Error"}
 
-    # --- 3. AUTHORITY (OpenPageRank API) ---
+    # 3. AUTHORITY (OPR)
     try:
-        domain = url.split("//")[-1].split("/")[0].replace("www.", "")
-        opr_headers = {'API-OPR': OPR_API_KEY}
-        opr_res = requests.get(f"https://openpagerank.com/api/v1.0/getPageRank?domains[]={domain}", headers=opr_headers).json()
-        
-        rank_data = opr_res['response'][0]
-        final_data['authority'] = {
-            "page_rank": rank_data['page_rank_decimal'] or 0,
-            "rank": rank_data['rank'] or "N/A",
-            "domain": rank_data['domain']
-        }
+        if OPR_API_KEY:
+            domain = url.split("//")[-1].split("/")[0].replace("www.", "")
+            opr = requests.get(f"https://openpagerank.com/api/v1.0/getPageRank?domains[]={domain}", headers={'API-OPR': OPR_API_KEY}).json()
+            d = opr['response'][0]
+            output['authority'] = { "page_rank": d['page_rank_decimal'] or 0, "rank": d['rank'], "domain": d['domain'] }
+        else:
+            output['authority'] = {"page_rank": 0, "rank": "N/A", "domain": "No Key"}
     except:
-        final_data['authority'] = {"page_rank": 0, "rank": "N/A", "domain": domain}
+        output['authority'] = {"page_rank": 0, "rank": "N/A"}
 
-    return cors_response(final_data)
+    return cors_response(output)
