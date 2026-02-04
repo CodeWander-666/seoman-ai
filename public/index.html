@@ -3,178 +3,878 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SEO Vision Pro | Real SEO Analysis</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>SEO Vision Pro | Advanced Real-Time SEO Analyzer</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #7c3aed;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #111827;
+            --darker: #0f172a;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --gray-light: #e2e8f0;
+            --border: #334155;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--darker) 0%, #1e293b 100%);
+            color: var(--light);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 40px 0;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
+            border-radius: 20px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .logo i {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .logo h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+        
+        .tagline {
+            color: var(--gray);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+        
+        .features {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .feature {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            color: var(--gray-light);
+            border: 1px solid var(--border);
+        }
+        
+        /* Input Section */
+        .input-section {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .input-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        @media (max-width: 768px) {
+            .input-group {
+                flex-direction: column;
+            }
+        }
+        
+        input[type="url"] {
+            flex: 1;
+            padding: 16px 20px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--light);
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+        
+        input[type="url"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .btn {
+            padding: 16px 32px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        /* Loading */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 50px 30px;
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 30px;
+        }
+        
+        .loading i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        .loading h3 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            color: var(--light);
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 25px auto;
+            max-width: 500px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        /* Dashboard */
+        .dashboard {
+            display: none;
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            overflow-x: auto;
+            gap: 5px;
+            margin-bottom: 30px;
+            padding: 5px;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        
+        .tab-btn {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            color: var(--gray);
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--light);
+        }
+        
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Score Cards */
+        .scores-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .score-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.8));
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .score-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+        }
+        
+        .score-icon {
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+        
+        .score-title {
+            font-size: 1.1rem;
+            color: var(--gray);
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        
+        .score-value {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .score-status {
+            font-size: 0.9rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        .status-excellent {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+        
+        .status-good {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+        
+        .status-poor {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+        
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .metric-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+        }
+        
+        .metric-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: var(--light);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .metric-item:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-label {
+            color: var(--gray);
+        }
+        
+        .metric-value {
+            color: var(--light);
+            font-weight: 500;
+        }
+        
+        /* Issues & Recommendations */
+        .issues-section, .recommendations-section {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .issues-section h3, .recommendations-section h3 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: var(--light);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .issues-list, .recommendations-list {
+            list-style: none;
+        }
+        
+        .issues-list li, .recommendations-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            color: var(--gray-light);
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .issues-list li:last-child, .recommendations-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .issues-list li i {
+            color: var(--warning);
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        
+        .recommendations-list li i {
+            color: var(--success);
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        
+        /* Charts */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-container {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+        }
+        
+        .chart-container h3 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: var(--light);
+        }
+        
+        .chart-placeholder {
+            height: 200px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray);
+            font-style: italic;
+        }
+        
+        /* Actions */
+        .actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            padding: 30px 0;
+            border-top: 1px solid var(--border);
+            margin-top: 30px;
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            color: var(--gray);
+            border-top: 1px solid var(--border);
+            margin-top: 50px;
+        }
+        
+        /* Real-time indicators */
+        .real-time-badge {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--success), #00c853);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--dark);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 15px 25px;
+            color: white;
+            z-index: 1000;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        
+        .notification.success {
+            border-left: 4px solid var(--success);
+        }
+        
+        .notification.error {
+            border-left: 4px solid var(--danger);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .logo h1 {
+                font-size: 2rem;
+            }
+            
+            .scores-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
+    <!-- Real-time Badge -->
+    <div class="real-time-badge" id="realTimeBadge" style="display: none;">
+        <i class="fas fa-sync-alt fa-spin"></i>
+        <span>Real-time Analysis</span>
+    </div>
+    
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+    
     <div class="container">
         <!-- Header -->
         <header class="header">
             <div class="logo">
-                <i class="fas fa-search"></i>
+                <i class="fas fa-search-chart"></i>
                 <h1>SEO Vision Pro</h1>
             </div>
-            <p class="tagline">Real SEO Analysis - No Fake Data</p>
+            <p class="tagline">Advanced Real-Time SEO Analysis with Live Data</p>
+            <div class="features">
+                <span class="feature"><i class="fas fa-bolt"></i> Real-time Analysis</span>
+                <span class="feature"><i class="fas fa-chart-line"></i> Traffic Forecasting</span>
+                <span class="feature"><i class="fas fa-shield-alt"></i> Security Audit</span>
+                <span class="feature"><i class="fas fa-mobile-alt"></i> Mobile Optimization</span>
+                <span class="feature"><i class="fas fa-robot"></i> AI Recommendations</span>
+            </div>
         </header>
-
-        <!-- Main Content -->
-        <main>
-            <!-- Input Section -->
-            <section class="input-section">
-                <h2><i class="fas fa-globe"></i> Enter Website URL</h2>
-                <div class="input-group">
-                    <input type="url" id="urlInput" placeholder="https://example.com" value="https://example.com">
-                    <button id="auditButton" class="btn">
-                        <i class="fas fa-play"></i> Start SEO Analysis
-                    </button>
+        
+        <!-- Input Section -->
+        <section class="input-section">
+            <h2><i class="fas fa-crosshairs"></i> Enter Website URL for Advanced Analysis</h2>
+            <div class="input-group">
+                <input type="url" id="urlInput" placeholder="https://example.com" value="https://example.com">
+                <button class="btn" id="analyzeBtn">
+                    <i class="fas fa-play"></i> Start Advanced Analysis
+                </button>
+            </div>
+            <p style="color: var(--gray); font-size: 0.9rem; margin-top: 10px;">
+                Enter any website URL for comprehensive SEO audit. Analysis includes technical SEO, content optimization, performance metrics, security audit, and more.
+            </p>
+        </section>
+        
+        <!-- Loading State -->
+        <div class="loading" id="loading">
+            <i class="fas fa-spinner fa-spin"></i>
+            <h3>Running Advanced SEO Analysis...</h3>
+            <p id="progressText">Initializing analysis modules</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <p id="progressPercent">0%</p>
+            <div style="color: var(--gray); margin-top: 20px;">
+                <i class="fas fa-info-circle"></i> Fetching real-time data from multiple sources...
+            </div>
+        </div>
+        
+        <!-- Dashboard -->
+        <div class="dashboard" id="dashboard">
+            <!-- Tabs -->
+            <div class="tabs" id="tabs">
+                <button class="tab-btn active" data-tab="overview">
+                    <i class="fas fa-chart-pie"></i> Overview
+                </button>
+                <button class="tab-btn" data-tab="technical">
+                    <i class="fas fa-cogs"></i> Technical SEO
+                </button>
+                <button class="tab-btn" data-tab="content">
+                    <i class="fas fa-file-alt"></i> Content Analysis
+                </button>
+                <button class="tab-btn" data-tab="performance">
+                    <i class="fas fa-tachometer-alt"></i> Performance
+                </button>
+                <button class="tab-btn" data-tab="security">
+                    <i class="fas fa-shield-alt"></i> Security
+                </button>
+                <button class="tab-btn" data-tab="structure">
+                    <i class="fas fa-sitemap"></i> Structure
+                </button>
+                <button class="tab-btn" data-tab="insights">
+                    <i class="fas fa-lightbulb"></i> Insights
+                </button>
+            </div>
+            
+            <!-- Overview Tab -->
+            <div class="tab-content active" id="overview-tab">
+                <!-- Scores -->
+                <div class="scores-grid" id="scoresGrid">
+                    <!-- Scores will be populated by JavaScript -->
                 </div>
-                <p class="hint">Enter any website URL starting with http:// or https://</p>
-            </section>
-
-            <!-- Loading State -->
-            <div id="loading" class="loading" style="display: none;">
-                <div class="loader">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <h3>Analyzing Website...</h3>
-                    <p id="progressText">Fetching website data</p>
-                    <div class="progress-bar">
-                        <div id="progressFill" class="progress-fill"></div>
+                
+                <!-- Key Metrics -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <h3><i class="fas fa-globe"></i> Website Info</h3>
+                        <div class="metric-item">
+                            <span class="metric-label">Domain:</span>
+                            <span class="metric-value" id="domain">--</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Status Code:</span>
+                            <span class="metric-value" id="statusCode">--</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Analysis Time:</span>
+                            <span class="metric-value" id="analysisTime">--</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Data Freshness:</span>
+                            <span class="metric-value" id="dataFreshness">--</span>
+                        </div>
                     </div>
-                    <p id="progressPercent">0%</p>
+                    
+                    <div class="metric-card">
+                        <h3><i class="fas fa-chart-bar"></i> Content Metrics</h3>
+                        <div class="metric-item">
+                            <span class="metric-label">Word Count:</span>
+                            <span class="metric-value" id="wordCount">--</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Readability:</span>
+                            <span class="metric-value" id="readability">--</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Images with Alt:</span>
+                            <span class="metric-value" id="imagesWithAlt">--</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Internal Links:</span>
+                            <span class="metric-value" id="internalLinks">--</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <h3><i class="fas fa-tachometer-alt"></i> Performance</h3>
+                        <div class="metric-item">
+                            <span class="metric-label">Performance Score:</span>
+                            <span class="metric-value" id="performanceScore">--</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">LCP:</span>
+                            <span class="metric-value" id="lcp">--</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">CLS:</span>
+                            <span class="metric-value" id="cls">--</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Mobile Friendly:</span>
+                            <span class="metric-value" id="mobileFriendly">--</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts -->
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <h3><i class="fas fa-chart-line"></i> SEO Score Distribution</h3>
+                        <div class="chart-placeholder" id="scoreChart">
+                            Interactive chart will appear here
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3><i class="fas fa-bullseye"></i> Optimization Opportunities</h3>
+                        <div class="chart-placeholder" id="opportunityChart">
+                            Optimization chart will appear here
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <!-- Results Dashboard -->
-            <div id="dashboard" class="dashboard" style="display: none;">
-                <!-- Score Overview -->
-                <section class="score-section">
-                    <h2><i class="fas fa-chart-line"></i> SEO Scores</h2>
-                    <div class="score-grid">
-                        <div class="score-card">
-                            <div class="score-header">
-                                <i class="fas fa-cogs"></i>
-                                <h3>Technical</h3>
-                            </div>
-                            <div class="score-value" id="techScore">--</div>
-                            <div class="score-label">Performance & Structure</div>
+            
+            <!-- Technical SEO Tab -->
+            <div class="tab-content" id="technical-tab">
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <h3><i class="fas fa-sitemap"></i> Crawlability</h3>
+                        <div class="metric-item">
+                            <span class="metric-label">Robots.txt:</span>
+                            <span class="metric-value" id="robotsTxt">--</span>
                         </div>
-                        <div class="score-card">
-                            <div class="score-header">
-                                <i class="fas fa-file-alt"></i>
-                                <h3>Content</h3>
-                            </div>
-                            <div class="score-value" id="contentScore">--</div>
-                            <div class="score-label">Quality & Relevance</div>
+                        <div class="metric-item">
+                            <span class="metric-label">Sitemap.xml:</span>
+                            <span class="metric-value" id="sitemap">--</span>
                         </div>
-                        <div class="score-card">
-                            <div class="score-header">
-                                <i class="fas fa-medal"></i>
-                                <h3>Authority</h3>
-                            </div>
-                            <div class="score-value" id="authorityScore">--</div>
-                            <div class="score-label">Trust & Links</div>
+                        <div class="metric-item">
+                            <span class="metric-label">Canonical Tags:</span>
+                            <span class="metric-value" id="canonicalTags">--</span>
                         </div>
-                        <div class="score-card">
-                            <div class="score-header">
-                                <i class="fas fa-star"></i>
-                                <h3>Overall</h3>
-                            </div>
-                            <div class="score-value" id="overallScore">--</div>
-                            <div class="score-label">Total SEO Health</div>
+                        <div class="metric-item">
+                            <span class="metric-label">Indexability:</span>
+                            <span class="metric-value" id="indexability">--</span>
                         </div>
                     </div>
-                </section>
-
-                <!-- Metrics -->
-                <section class="metrics-section">
-                    <h2><i class="fas fa-chart-bar"></i> Page Metrics</h2>
-                    <div class="metrics-grid">
-                        <div class="metric-card">
-                            <h3><i class="fas fa-text-height"></i> Content</h3>
-                            <div class="metric">
-                                <span>Word Count:</span>
-                                <strong id="wordCount">--</strong>
-                            </div>
-                            <div class="metric">
-                                <span>Page Title:</span>
-                                <span id="pageTitle" class="small">--</span>
-                            </div>
-                            <div class="metric">
-                                <span>Meta Description:</span>
-                                <span id="metaDescription" class="small">--</span>
-                            </div>
+                    
+                    <div class="metric-card">
+                        <h3><i class="fas fa-link"></i> URL Structure</h3>
+                        <div class="metric-item">
+                            <span class="metric-label">URL Length:</span>
+                            <span class="metric-value" id="urlLength">--</span>
                         </div>
-                        <div class="metric-card">
-                            <h3><i class="fas fa-sitemap"></i> Structure</h3>
-                            <div class="metric">
-                                <span>H1 Tags:</span>
-                                <strong id="h1Count">--</strong>
-                            </div>
-                            <div class="metric">
-                                <span>H2 Tags:</span>
-                                <strong id="h2Count">--</strong>
-                            </div>
-                            <div class="metric">
-                                <span>Images (with alt):</span>
-                                <strong id="imagesWithAlt">--</strong>
-                            </div>
+                        <div class="metric-item">
+                            <span class="metric-label">URL Depth:</span>
+                            <span class="metric-value" id="urlDepth">--</span>
                         </div>
-                        <div class="metric-card">
-                            <h3><i class="fas fa-link"></i> Links & Performance</h3>
-                            <div class="metric">
-                                <span>Internal Links:</span>
-                                <strong id="internalLinks">--</strong>
-                            </div>
-                            <div class="metric">
-                                <span>External Links:</span>
-                                <strong id="externalLinks">--</strong>
-                            </div>
-                            <div class="metric">
-                                <span>Page Size:</span>
-                                <strong id="pageSize">--</strong>
-                            </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Redirect Chain:</span>
+                            <span class="metric-value" id="redirectChain">--</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">URL Parameters:</span>
+                            <span class="metric-value" id="urlParams">--</span>
                         </div>
                     </div>
-                </section>
-
-                <!-- Issues & Recommendations -->
-                <section class="issues-section">
-                    <div class="issues-recommendations">
-                        <div class="issues">
-                            <h3><i class="fas fa-exclamation-triangle"></i> Issues Found</h3>
-                            <ul id="issuesList">
-                                <li>Complete analysis to see issues</li>
-                            </ul>
-                        </div>
-                        <div class="recommendations">
-                            <h3><i class="fas fa-lightbulb"></i> Recommendations</h3>
-                            <ul id="recommendationsList">
-                                <li>Complete analysis for recommendations</li>
-                            </ul>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Actions -->
-                <section class="actions-section">
-                    <button id="newAudit" class="btn secondary">
-                        <i class="fas fa-redo"></i> New Analysis
-                    </button>
-                    <button class="btn">
-                        <i class="fas fa-download"></i> Export Report
-                    </button>
-                </section>
+                </div>
+                
+                <div class="issues-section">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Technical Issues</h3>
+                    <ul class="issues-list" id="technicalIssues">
+                        <!-- Technical issues will be populated here -->
+                    </ul>
+                </div>
             </div>
-        </main>
-
+            
+            <!-- Content Analysis Tab -->
+            <div class="tab-content" id="content-tab">
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <h3><i class="fas fa-file-alt"></i> Content Quality</h3>
+                        <div class="metric-item">
+                            <span class="metric-label">Content Type:</span>
+                            <span class="metric-value" id="contentType">--</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Reading Level:</span>
+                            <span class="metric-value" id="readingLevel">--</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Semantic Score:</span>
+                            <span class="metric-value" id="semanticScore">--</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Thin Content:</span>
+                            <span class="metric-value" id="thinContent">--</span>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <h3><i class="fas fa-key"></i> Keywords</h3>
+                        <div class="metric-item">
+                            <span class="metric-label">Top Keyword:</span>
+                            <span class="metric-value" id="topKeyword">--</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Keyword Density:</span>
+                            <span class="metric-value" id="keywordDensity">--</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Unique Words:</span>
+                            <span class="metric-value" id="uniqueWords">--</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">LSI Keywords:</span>
+                            <span class="metric-value" id="lsiKeywords">--</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="recommendations-section">
+                    <h3><i class="fas fa-lightbulb"></i> Content Recommendations</h3>
+                    <ul class="recommendations-list" id="contentRecommendations">
+                        <!-- Content recommendations will be populated here -->
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Add more tabs for Performance, Security, Structure, Insights -->
+            
+            <!-- Issues & Recommendations -->
+            <div class="issues-section">
+                <h3><i class="fas fa-exclamation-triangle"></i> Critical Issues</h3>
+                <ul class="issues-list" id="criticalIssues">
+                    <!-- Critical issues will be populated here -->
+                </ul>
+            </div>
+            
+            <div class="recommendations-section">
+                <h3><i class="fas fa-lightbulb"></i> High Priority Recommendations</h3>
+                <ul class="recommendations-list" id="highPriorityRecs">
+                    <!-- High priority recommendations will be populated here -->
+                </ul>
+            </div>
+            
+            <!-- Actions -->
+            <div class="actions">
+                <button class="btn btn-secondary" id="newAnalysisBtn">
+                    <i class="fas fa-redo"></i> New Analysis
+                </button>
+                <button class="btn" id="exportReportBtn">
+                    <i class="fas fa-download"></i> Export Full Report
+                </button>
+                <button class="btn" id="shareResultsBtn">
+                    <i class="fas fa-share-alt"></i> Share Results
+                </button>
+            </div>
+        </div>
+        
         <!-- Footer -->
         <footer>
-            <p>SEO Vision Pro &copy; 2024 | Real SEO Analysis Tool</p>
-            <p class="small">Analyzes actual website data - No fake results</p>
+            <p>SEO Vision Pro &copy; 2024 | Advanced Real-Time SEO Analysis Tool</p>
+            <p style="font-size: 0.9rem; margin-top: 10px; color: var(--gray);">
+                Analyzes live website data • Provides actionable insights • No fake results
+            </p>
         </footer>
     </div>
 
-    <script src="script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Complete JavaScript code will be provided in the next response
+        // This includes all the frontend logic for the advanced analyzer
+    </script>
 </body>
 </html>
