@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEO Master Dashboard</title>
+    <style>
+        :root { 
+            --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --muted: #94a3b8; 
+            --accent: #3b82f6; --good: #22c55e; --bad: #ef4444; 
+        }
+        body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 2rem; }
+        
+        /* SEARCH BAR */
+        .header { max-width: 1200px; margin: 0 auto 3rem auto; text-align: center; }
+        .input-group { display: flex; gap: 10px; justify-content: center; max-width: 600px; margin: 20px auto; }
+        input { padding: 15px; width: 100%; border-radius: 8px; border: none; background: var(--card); color: white; font-size: 1rem; border: 1px solid #334155; }
+        button { padding: 15px 30px; border-radius: 8px; border: none; background: var(--accent); color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { opacity: 0.9; }
+
+        /* THE 5 PILLARS GRID */
+        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; max-width: 1200px; margin: 0 auto; display: none; }
+        
+        .card { background: var(--card); padding: 1.5rem; border-radius: 12px; border: 1px solid #334155; position: relative; overflow: hidden; }
+        .card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--accent); }
+        
+        .card h2 { font-size: 1rem; text-transform: uppercase; color: var(--muted); letter-spacing: 1px; margin-top: 0; }
+        .big-number { font-size: 3rem; font-weight: 800; margin: 10px 0; }
+        .stat-row { display: flex; justify-content: space-between; margin-top: 10px; border-bottom: 1px solid #334155; padding-bottom: 5px; }
+        .stat-val { font-weight: bold; }
+        
+        /* SPECIFIC CARD COLORS */
+        .card.strategy::before { background: #8b5cf6; } /* Purple */
+        .card.technical::before { background: #f59e0b; } /* Orange */
+        .card.content::before { background: #22c55e; } /* Green */
+        .card.authority::before { background: #ec4899; } /* Pink */
+
+        /* UTILS */
+        .loader { text-align: center; font-size: 1.2rem; margin-top: 3rem; color: var(--accent); display: none; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; background: #334155; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>THE ART OF SEO / ANALYZER</h1>
+        <div class="input-group">
+            <input type="text" id="url" placeholder="Enter URL (e.g. https://example.com)">
+            <button onclick="runAnalysis()">ANALYZE</button>
+        </div>
+    </div>
+
+    <div id="loader" class="loader">
+        Querying Google PageSpeed + OpenPageRank + Scraping Content... <br> (Please wait 10-15 seconds)
+    </div>
+
+    <div id="ui" class="dashboard">
+        
+        <div class="card strategy">
+            <h2>1. Strategic Intent</h2>
+            <div class="big-number" id="intent_type">--</div>
+            <p id="intent_desc" style="color: var(--muted)">Analyzing keywords...</p>
+            <div class="stat-row"><span>Status Code</span> <span class="stat-val" id="status_code">--</span></div>
+            <div class="stat-row"><span>Server</span> <span class="stat-val" id="server">--</span></div>
+        </div>
+
+        <div class="card technical">
+            <h2>2. Technical Health</h2>
+            <div class="big-number" id="perf_score">--</div>
+            <div class="stat-row"><span>Load Time (LCP)</span> <span class="stat-val" id="lcp">--</span></div>
+            <div class="stat-row"><span>Stability (CLS)</span> <span class="stat-val" id="cls">--</span></div>
+            <div class="stat-row"><span>Mobile Friendly</span> <span class="stat-val badge" id="mobile">Pass</span></div>
+        </div>
+
+        <div class="card content">
+            <h2>3. Content Depth</h2>
+            <div class="big-number" id="read_score">--</div>
+            <p style="color: var(--muted)">Readability Score (0-100)</p>
+            <div class="stat-row"><span>Word Count</span> <span class="stat-val" id="words">--</span></div>
+            <div class="stat-row"><span>Title Length</span> <span class="stat-val" id="title_len">--</span></div>
+            <div class="stat-row"><span>Meta Desc</span> <span class="stat-val" id="has_desc">--</span></div>
+        </div>
+
+        <div class="card authority">
+            <h2>4. Authority (Off-Page)</h2>
+            <div class="big-number" id="auth_score">--</div>
+            <p style="color: var(--muted)">OpenPageRank Score (0-10)</p>
+            <div class="stat-row"><span>Global Rank</span> <span class="stat-val" id="global_rank">--</span></div>
+            <div class="stat-row"><span>Domain</span> <span class="stat-val" id="domain_name">--</span></div>
+        </div>
+
+    </div>
+
+    <script>
+        async function runAnalysis() {
+            const url = document.getElementById('url').value;
+            const ui = document.getElementById('ui');
+            const loader = document.getElementById('loader');
+            
+            // ⚠️ REPLACE THIS WITH YOUR FINAL VERCEL URL AFTER DEPLOYMENT ⚠️
+            const API_ENDPOINT = "https://YOUR-VERCEL-PROJECT.vercel.app/api/analyze"; 
+
+            if(!url) return alert("Enter a URL");
+
+            ui.style.display = 'none';
+            loader.style.display = 'block';
+
+            try {
+                const res = await fetch(`${API_ENDPOINT}?url=${encodeURIComponent(url)}`);
+                const data = await res.json();
+
+                // 1. STRATEGY
+                document.getElementById('intent_type').innerText = data.strategy.intent;
+                document.getElementById('intent_desc').innerText = `Probable user goal: ${data.strategy.intent}`;
+                document.getElementById('status_code').innerText = data.strategy.status;
+                document.getElementById('server').innerText = data.strategy.server;
+
+                // 2. TECHNICAL
+                const tech = data.technical;
+                const score = document.getElementById('perf_score');
+                score.innerText = tech.speed_score;
+                score.style.color = tech.speed_score > 89 ? '#22c55e' : (tech.speed_score > 49 ? '#f59e0b' : '#ef4444');
+                document.getElementById('lcp').innerText = tech.lcp;
+                document.getElementById('cls').innerText = tech.cls;
+
+                // 3. CONTENT
+                const cont = data.content;
+                document.getElementById('read_score').innerText = cont.readability;
+                document.getElementById('words').innerText = cont.word_count;
+                document.getElementById('title_len').innerText = `${cont.title_len} chars`;
+                document.getElementById('has_desc').innerText = cont.description ? "✅ Found" : "❌ Missing";
+
+                // 4. AUTHORITY
+                const auth = data.authority;
+                document.getElementById('auth_score').innerText = auth.page_rank;
+                document.getElementById('global_rank').innerText = auth.rank !== "N/A" ? "#" + Number(auth.rank).toLocaleString() : "Unranked";
+                document.getElementById('domain_name').innerText = auth.domain;
+
+                loader.style.display = 'none';
+                ui.style.display = 'grid';
+
+            } catch (err) {
+                alert("Analysis failed. Check console.");
+                console.error(err);
+                loader.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
