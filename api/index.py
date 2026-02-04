@@ -22,16 +22,13 @@ def cors_response(data, status=200):
 class EnterpriseIntelligence:
     @staticmethod
     def run_deep_analysis(scrape_data, authority_data, speed_data):
-        # 1. TRAFFIC ESTIMATION
         auth_score = authority_data.get('page_rank', 0) or 0.1
         word_count = scrape_data.get('content', {}).get('word_count', 0)
         est_traffic = int((auth_score * 15 * word_count) / 40)
         
-        # 2. BEHAVIOR ESTIMATION
         speed = speed_data.get('speed_score', 50)
         est_bounce_rate = max(25, min(90, 100 - (speed * 0.6)))
         
-        # 3. ADS VALUE ESTIMATION
         keywords = scrape_data.get('content', {}).get('keywords', [])
         monetized_keywords = []
         for word, count in keywords:
@@ -55,7 +52,7 @@ class EnterpriseIntelligence:
         }
 
 # ==============================================================================
-# 🔌 CLASS 2: API CONNECTOR (Using Official Google Library)
+# 🔌 CLASS 2: API CONNECTOR (Dynamic Model Discovery)
 # ==============================================================================
 class APIConnector:
     # --- 1. SCRAPING ---
@@ -137,40 +134,44 @@ class APIConnector:
         d = resp.json()['response'][0]
         return { "page_rank": d['page_rank_decimal'] or 0, "rank": d['rank'], "domain": d['domain'] }
 
-    # --- 4. AI ADVISOR (USING OFFICIAL SDK) ---
+    # --- 4. AI ADVISOR (DYNAMIC MODEL DISCOVERY) ---
     @staticmethod
     def get_ai_advice(seo_data, api_key):
         """
-        Uses the OFFICIAL Google Client Library (like the video).
-        This automatically handles URL versions and model finding.
+        Instead of guessing 'gemini-pro', this function asks Google:
+        'What models are available for this specific API Key?'
+        and uses the first valid one.
         """
         if not api_key: return "AI BRAIN: OFFLINE (Missing GEMINI_API_KEY)"
         
         try:
-            # 1. Import Official Library
             import google.generativeai as genai
-            
-            # 2. Configure Key
             genai.configure(api_key=api_key)
             
-            # 3. Construct Prompt
+            # 1. FIND A WORKING MODEL
+            active_model = None
+            try:
+                # Ask Google for list of models
+                for m in genai.list_models():
+                    if 'generateContent' in m.supported_generation_methods:
+                        active_model = m.name
+                        break # Found one, stop looking
+            except:
+                return "AI Error: Key Invalid or API Not Enabled"
+
+            if not active_model:
+                return "AI Error: No Models Available for this Key"
+
+            # 2. GENERATE CONTENT
             stats = f"Speed:{seo_data.get('technical',{}).get('speed_score')}, Traffic:{seo_data.get('enterprise',{}).get('search_console_projection',{}).get('est_monthly_traffic')}"
             prompt = f"You are a Senior SEO Auditor. Based on these site stats: [{stats}], provide ONE specific, high-impact technical recommendation. Keep it under 20 words."
-
-            # 4. Generate (Try Flash first, then Pro)
-            try:
-                model = genai.GenerativeModel('gemini-1.5-flash')
-                response = model.generate_content(prompt)
-                return response.text
-            except:
-                # Fallback to Pro (The standard model)
-                model = genai.GenerativeModel('gemini-pro')
-                response = model.generate_content(prompt)
-                return response.text
+            
+            model = genai.GenerativeModel(active_model)
+            response = model.generate_content(prompt)
+            return response.text
 
         except Exception as e:
-            # If the library crashes, it usually means the key is invalid
-            return f"SDK Error: {str(e)[:30]}..."
+            return f"AI Critical Fail: {str(e)[:30]}"
 
 # ==============================================================================
 # 🛡️ CLASS 3: SELF REPAIR
