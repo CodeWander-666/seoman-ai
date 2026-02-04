@@ -20,6 +20,77 @@ def get_readability(text):
     # Normalize to 0-100 (Lower ARI = Easier = Higher Score)
     return max(0, min(100, int(100 - score)))
 
+
+# ==============================================================================
+# 🔌 NEW: API CONNECTOR (Paste this BEFORE the @app.route line)
+# ==============================================================================
+class APIConnector:
+    @staticmethod
+    def get_google_data(target_url, api_key):
+        """Fetches Core Web Vitals from Google PageSpeed API"""
+        if not api_key:
+            return {"speed_score": 0, "lcp": "No Key", "cls": "No Key"}
+        
+        try:
+            # We import requests inside to prevent startup crashes if lib is missing
+            import requests
+            endpoint = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
+            params = {
+                "url": target_url,
+                "strategy": "mobile",
+                "key": api_key
+            }
+            
+            resp = requests.get(endpoint, params=params, timeout=15)
+            data = resp.json()
+
+            # Error Handling (e.g. Quota Limit)
+            if 'error' in data:
+                code = data['error'].get('code', 500)
+                msg = data['error'].get('message', 'Unknown API Error')
+                return {"speed_score": 0, "lcp": f"Err {code}", "cls": "API Fail"}
+
+            # Success Parsing
+            lh = data.get('lighthouseResult', {})
+            score = lh.get('categories', {}).get('performance', {}).get('score', 0)
+            audits = lh.get('audits', {})
+            
+            return {
+                "speed_score": int(score * 100),
+                "lcp": audits.get('largest-contentful-paint', {}).get('displayValue', 'N/A'),
+                "cls": audits.get('cumulative-layout-shift', {}).get('displayValue', 'N/A')
+            }
+        except Exception as e:
+            return {"speed_score": 0, "lcp": "Crash", "cls": str(e)[:10]}
+
+    @staticmethod
+    def get_authority_data(domain, api_key):
+        """Fetches Domain Authority from OpenPageRank"""
+        if not api_key:
+            return {"page_rank": 0, "rank": "No Key", "domain": "Config Required"}
+            
+        try:
+            import requests
+            endpoint = "https://openpagerank.com/api/v1.0/getPageRank"
+            headers = {'API-OPR': api_key}
+            params = {'domains[]': domain}
+            
+            resp = requests.get(endpoint, headers=headers, params=params, timeout=10)
+            data = resp.json()
+            
+            if data.get('status_code') != 200:
+                return {"page_rank": 0, "rank": "API Error", "domain": domain}
+
+            result = data['response'][0]
+            return {
+                "page_rank": result['page_rank_decimal'] or 0,
+                "rank": result['rank'] or "Unranked",
+                "domain": result['domain']
+            }
+        except Exception as e:
+            return {"page_rank": 0, "rank": "N/A", "domain": "Auth Fail"}
+
+
 # --- Main Handler ---
 @app.route('/api/analyze', methods=['GET', 'OPTIONS'])
 def analyze():
