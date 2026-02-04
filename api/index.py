@@ -56,6 +56,7 @@ def analyze():
 
     output = {}
 
+    
     # 5. Logic: Strategy & Content (Protected by SelfRepair)
     def run_scraping():
         headers = {'User-Agent': 'SEO-Bot/1.0'}
