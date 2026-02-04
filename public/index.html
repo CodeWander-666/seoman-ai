@@ -1,288 +1,354 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SEO // VISION PRO</title>
-    <style>
-        :root {
-            --bg: #030712;
-            --glass: rgba(17, 24, 39, 0.7);
-            --border: rgba(255, 255, 255, 0.08);
-            --primary: #06b6d4;
-            --purple: #8b5cf6;
-            --pink: #ec4899;
-            --green: #10b981;
-            --text: #f8fafc;
-            --muted: #94a3b8;
-        }
-
-        body {
-            margin: 0;
-            background: var(--bg);
-            font-family: 'Courier New', Courier, monospace;
-            color: var(--text);
-            padding: 20px;
-            min-height: 100vh;
-            background-image: 
-                radial-gradient(circle at 15% 50%, rgba(6, 182, 212, 0.05), transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.05), transparent 25%);
-        }
-
-        .container { max-width: 1200px; margin: 0 auto; }
-
-        /* Header & Input */
-        header {
-            text-align: center;
-            margin-bottom: 40px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 20px;
-        }
-        
-        h1 {
-            font-size: 2rem;
-            letter-spacing: -1px;
-            margin-bottom: 5px;
-        }
-        
-        .badge {
-            background: rgba(6, 182, 212, 0.1);
-            color: var(--primary);
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            border: 1px solid rgba(6, 182, 212, 0.2);
-        }
-
-        .input-group {
-            display: flex;
-            max-width: 600px;
-            margin: 30px auto 0;
-            position: relative;
-        }
-
-        input {
-            flex: 1;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid var(--border);
-            padding: 15px;
-            color: var(--text);
-            font-family: inherit;
-            border-radius: 6px 0 0 6px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        input:focus { border-color: var(--primary); }
-
-        button {
-            background: var(--primary);
-            color: black;
-            border: none;
-            padding: 0 25px;
-            font-weight: bold;
-            font-family: inherit;
-            cursor: pointer;
-            border-radius: 0 6px 6px 0;
-            transition: opacity 0.2s;
-        }
-
-        button:hover { opacity: 0.9; }
-
-        /* Dashboard Grid */
-        #dashboard {
-            display: none;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .card {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            padding: 25px;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-        }
-
-        .card h3 {
-            margin: 0 0 15px 0;
-            color: var(--muted);
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .big-number {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: var(--text);
-            margin-bottom: 5px;
-        }
-
-        .sub-text { font-size: 0.8rem; color: var(--muted); }
-
-        /* Specific Colors */
-        .text-primary { color: var(--primary); }
-        .text-purple { color: var(--purple); }
-        .text-pink { color: var(--pink); }
-        .text-green { color: var(--green); }
-
-        /* Terminal Style for AI */
-        .terminal {
-            grid-column: 1 / -1;
-            background: rgba(0,0,0,0.5);
-            font-family: 'Courier New', monospace;
-            padding: 20px;
-            border-left: 3px solid var(--purple);
-        }
-        
-        .terminal-text {
-            line-height: 1.6;
-            white-space: pre-wrap;
-        }
-
-        /* Loader */
-        #loader {
-            display: none;
-            text-align: center;
-            margin-top: 50px;
-            color: var(--primary);
-        }
-
-        @keyframes blink { 50% { opacity: 0; } }
-        .cursor { animation: blink 1s infinite; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .metric-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 5px;
-        }
-    </style>
+    <title>SEO // VISION PRO | 360° Enterprise SEO Audit Platform</title>
+    <meta name="description" content="Serverless, AI-powered SEO analyzer with Gemini AI integration. Free tier available.">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-satellite-dish"></i>
+                    <h1>SEO // VISION <span class="pro">PRO</span></h1>
+                </div>
+                <div class="tagline">
+                    <p class="subtitle">360° Enterprise-Grade SEO Audit Platform</p>
+                    <p class="plan-badge free">FREE PLAN ACTIVE</p>
+                </div>
+            </div>
+            <div class="header-stats">
+                <div class="stat">
+                    <i class="fas fa-bolt"></i>
+                    <span>Serverless</span>
+                </div>
+                <div class="stat">
+                    <i class="fas fa-robot"></i>
+                    <span>AI-Powered</span>
+                </div>
+                <div class="stat">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>100% Error-Free</span>
+                </div>
+            </div>
+        </header>
 
-<div class="container">
-    <header>
-        <h1>SEO // VISION PRO <span class="badge">V2.0</span></h1>
-        <p style="color: var(--muted)">SERVERLESS AUDIT SYSTEM</p>
-        
-        <div class="input-group">
-            <input type="text" id="urlInput" placeholder="https://example.com" value="https://example.com">
-            <button onclick="runAudit()">SCAN TARGET</button>
-        </div>
-    </header>
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Input Section -->
+            <section class="input-section glass">
+                <div class="input-container">
+                    <div class="input-header">
+                        <h2><i class="fas fa-crosshairs"></i> TARGET ACQUISITION</h2>
+                        <p class="input-subtitle">Enter URL for comprehensive 360° audit</p>
+                    </div>
+                    <div class="url-input-wrapper">
+                        <div class="input-group">
+                            <i class="fas fa-globe input-icon"></i>
+                            <input 
+                                type="url" 
+                                id="urlInput" 
+                                placeholder="https://example.com"
+                                autocomplete="off"
+                                spellcheck="false"
+                            >
+                            <div class="input-hint">Include https://</div>
+                        </div>
+                        <button id="auditButton" class="primary-btn">
+                            <i class="fas fa-satellite-dish"></i>
+                            <span>INITIATE SCAN</span>
+                            <div class="btn-pulse"></div>
+                        </button>
+                    </div>
+                    <div class="plan-info">
+                        <p><i class="fas fa-info-circle"></i> Free Plan: 1 audit per IP per 24h • 50 page limit • Basic reports</p>
+                    </div>
+                </div>
+            </section>
 
-    <div id="loader">
-        [ SYSTEM ANALYZING ]<span class="cursor">_</span>
-        <br>
-        <small style="color:var(--muted)">Connecting to Neural Network...</small>
+            <!-- Loading State -->
+            <div id="loading" class="loading-state glass" style="display: none;">
+                <div class="satellite-loader">
+                    <div class="satellite">
+                        <i class="fas fa-satellite"></i>
+                    </div>
+                    <div class="orbit"></div>
+                </div>
+                <h3>SATELLITE UPLINK ESTABLISHED</h3>
+                <p class="loading-text">Scanning target • Aggregating metrics • Deploying AI analysis</p>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-stats">
+                        <span id="progressText">Initializing systems...</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                </div>
+                <div class="scan-stages">
+                    <div class="stage active"><i class="fas fa-search"></i> Crawling</div>
+                    <div class="stage"><i class="fas fa-chart-line"></i> Analyzing</div>
+                    <div class="stage"><i class="fas fa-brain"></i> AI Processing</div>
+                    <div class="stage"><i class="fas fa-file-alt"></i> Reporting</div>
+                </div>
+            </div>
+
+            <!-- Results Dashboard -->
+            <div id="dashboard" class="dashboard" style="display: none;">
+                <!-- Score Overview -->
+                <section class="score-overview glass">
+                    <div class="score-header">
+                        <h2><i class="fas fa-chart-pie"></i> 360° SCORE OVERVIEW</h2>
+                        <div class="score-timestamp" id="timestamp"></div>
+                    </div>
+                    <div class="score-grid">
+                        <div class="score-card technical">
+                            <div class="score-icon">
+                                <i class="fas fa-cogs"></i>
+                            </div>
+                            <div class="score-content">
+                                <h3>TECHNICAL</h3>
+                                <div class="score-value" id="techScore">--</div>
+                                <div class="score-label">Core Vitals • Architecture</div>
+                            </div>
+                        </div>
+                        <div class="score-card content">
+                            <div class="score-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="score-content">
+                                <h3>CONTENT</h3>
+                                <div class="score-value" id="contentScore">--</div>
+                                <div class="score-label">Quality • Relevance • Depth</div>
+                            </div>
+                        </div>
+                        <div class="score-card authority">
+                            <div class="score-icon">
+                                <i class="fas fa-medal"></i>
+                            </div>
+                            <div class="score-content">
+                                <h3>AUTHORITY</h3>
+                                <div class="score-value" id="authorityScore">--</div>
+                                <div class="score-label">E-E-A-T • Backlinks • Trust</div>
+                            </div>
+                        </div>
+                        <div class="score-card overall">
+                            <div class="score-icon">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="score-content">
+                                <h3>OVERALL</h3>
+                                <div class="score-value" id="overallScore">--</div>
+                                <div class="score-label">Composite SEO Health</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Technical Audit -->
+                <section class="audit-section glass">
+                    <h2><i class="fas fa-microchip"></i> TECHNICAL AUDIT</h2>
+                    <div class="audit-grid">
+                        <div class="audit-card">
+                            <h3><i class="fas fa-tachometer-alt"></i> CORE WEB VITALS</h3>
+                            <div class="vitals-grid">
+                                <div class="vital" id="lcp">
+                                    <div class="vital-label">LCP</div>
+                                    <div class="vital-value">--</div>
+                                    <div class="vital-status">--</div>
+                                </div>
+                                <div class="vital" id="cls">
+                                    <div class="vital-label">CLS</div>
+                                    <div class="vital-value">--</div>
+                                    <div class="vital-status">--</div>
+                                </div>
+                                <div class="vital" id="inp">
+                                    <div class="vital-label">INP</div>
+                                    <div class="vital-value">--</div>
+                                    <div class="vital-status">--</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="audit-card">
+                            <h3><i class="fas fa-mobile-alt"></i> MOBILE RESPONSIVENESS</h3>
+                            <div class="mobile-score" id="mobileScore">--</div>
+                            <div class="mobile-details" id="mobileDetails"></div>
+                        </div>
+                        <div class="audit-card">
+                            <h3><i class="fas fa-shield-alt"></i> SECURITY & SSL</h3>
+                            <div class="ssl-grade" id="sslGrade">--</div>
+                            <div class="ssl-details" id="sslDetails"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Content Analysis -->
+                <section class="audit-section glass">
+                    <h2><i class="fas fa-edit"></i> CONTENT ANALYSIS</h2>
+                    <div class="content-grid">
+                        <div class="content-card">
+                            <h3><i class="fas fa-ruler-combined"></i> CONTENT DEPTH</h3>
+                            <div class="word-count" id="wordCount">--</div>
+                            <div class="readability" id="readability">--</div>
+                            <div class="thin-content-warning" id="thinWarning" style="display: none;">
+                                <i class="fas fa-exclamation-triangle"></i> Thin Content Risk
+                            </div>
+                        </div>
+                        <div class="content-card">
+                            <h3><i class="fas fa-bullseye"></i> SEARCH INTENT</h3>
+                            <div class="intent-badge" id="intent">--</div>
+                            <div class="intent-description" id="intentDesc"></div>
+                        </div>
+                        <div class="content-card">
+                            <h3><i class="fas fa-key"></i> TOP KEYWORDS</h3>
+                            <div class="keywords-list" id="keywords"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Authority & Forecasting -->
+                <section class="audit-section glass">
+                    <h2><i class="fas fa-chart-line"></i> AUTHORITY & FORECASTING</h2>
+                    <div class="authority-grid">
+                        <div class="authority-card">
+                            <h3><i class="fas fa-crown"></i> DOMAIN AUTHORITY</h3>
+                            <div class="authority-score" id="daScore">--</div>
+                            <div class="authority-description" id="daDesc"></div>
+                        </div>
+                        <div class="authority-card">
+                            <h3><i class="fas fa-link"></i> BACKLINK ESTIMATE</h3>
+                            <div class="backlink-count" id="backlinks">--</div>
+                            <div class="toxicity-risk" id="toxicity">--</div>
+                        </div>
+                        <div class="authority-card">
+                            <h3><i class="fas fa-crystal-ball"></i> TRAFFIC FORECAST</h3>
+                            <div class="traffic-forecast">
+                                <div class="forecast-range">
+                                    <span class="low" id="trafficLow">--</span>
+                                    <span class="mid" id="trafficMid">--</span>
+                                    <span class="high" id="trafficHigh">--</span>
+                                </div>
+                                <div class="forecast-label">Monthly Visitors (Pessimistic → Optimistic)</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- AI Strategic Advisor -->
+                <section class="ai-section glass">
+                    <div class="ai-header">
+                        <h2><i class="fas fa-robot"></i> AI STRATEGIC ADVISOR</h2>
+                        <div class="ai-model">Powered by Gemini 2.0</div>
+                    </div>
+                    <div class="ai-content">
+                        <div class="ai-stream" id="aiStream">
+                            <div class="ai-message">
+                                <i class="fas fa-brain"></i>
+                                <p>Initializing AI analysis based on "The Art of SEO" 4th Edition principles...</p>
+                            </div>
+                        </div>
+                        <div class="ai-categories">
+                            <div class="ai-category">
+                                <h4><i class="fas fa-wrench"></i> Technical Fixes</h4>
+                                <ul id="techFixes"></ul>
+                            </div>
+                            <div class="ai-category">
+                                <h4><i class="fas fa-lightbulb"></i> Content Opportunities</h4>
+                                <ul id="contentOpps"></ul>
+                            </div>
+                            <div class="ai-category">
+                                <h4><i class="fas fa-bolt"></i> Quick Wins</h4>
+                                <ul id="quickWins"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Internal Structure -->
+                <section class="audit-section glass">
+                    <h2><i class="fas fa-sitemap"></i> INTERNAL STRUCTURE</h2>
+                    <div class="structure-grid">
+                        <div class="structure-card">
+                            <h3><i class="fas fa-sitemap"></i> CRAWL STATS</h3>
+                            <div class="structure-stats">
+                                <div class="stat">
+                                    <div class="stat-value" id="pagesCrawled">--</div>
+                                    <div class="stat-label">Pages Crawled</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value" id="internalLinks">--</div>
+                                    <div class="stat-label">Internal Links</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value" id="externalLinks">--</div>
+                                    <div class="stat-label">External Links</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="structure-card">
+                            <h3><i class="fas fa-heartbeat"></i> STRUCTURE HEALTH</h3>
+                            <div class="health-score" id="structureHealth">--</div>
+                            <div class="health-description" id="structureDesc"></div>
+                        </div>
+                        <div class="structure-card">
+                            <h3><i class="fas fa-exclamation-triangle"></i> WARNINGS</h3>
+                            <div class="warnings-list" id="structureWarnings"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Export & Actions -->
+                <section class="actions-section glass">
+                    <h2><i class="fas fa-download"></i> EXPORT & ACTIONS</h2>
+                    <div class="action-buttons">
+                        <button class="action-btn" id="exportPDF">
+                            <i class="fas fa-file-pdf"></i> Export PDF Report
+                        </button>
+                        <button class="action-btn" id="shareReport">
+                            <i class="fas fa-share-alt"></i> Share Results
+                        </button>
+                        <button class="action-btn" id="runBenchmark">
+                            <i class="fas fa-chart-bar"></i> Benchmark Competitors
+                        </button>
+                        <button class="action-btn secondary" id="newAudit">
+                            <i class="fas fa-redo"></i> New Audit
+                        </button>
+                    </div>
+                    <div class="free-plan-notice">
+                        <i class="fas fa-info-circle"></i>
+                        <p>Free Plan Limitations: Reports expire after 7 days • Max 50 pages per audit • Basic metrics only</p>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer glass">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h3><i class="fas fa-satellite-dish"></i> SEO VISION PRO</h3>
+                    <p>Serverless 360° SEO Analysis Platform</p>
+                    <p class="footer-tagline">Built with ❤️ for the SEO community • Based on "The Art of SEO" 4th Edition</p>
+                </div>
+                <div class="footer-links">
+                    <a href="#"><i class="fab fa-github"></i> GitHub</a>
+                    <a href="#"><i class="fas fa-book"></i> Documentation</a>
+                    <a href="#"><i class="fas fa-shield-alt"></i> Privacy</a>
+                    <a href="#"><i class="fas fa-envelope"></i> Contact</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2024 SEO VISION PRO • All rights reserved • Hosted on Vercel • v2.0.0</p>
+            </div>
+        </footer>
     </div>
 
-    <div id="dashboard">
-        <!-- Traffic Holodeck -->
-        <div class="card">
-            <h3>Projected Traffic</h3>
-            <div class="big-number text-primary" id="trafVal">0</div>
-            <div class="sub-text">Monthly Visits (Est)</div>
-        </div>
-
-        <!-- Financials -->
-        <div class="card">
-            <h3>Ad Value Estimate</h3>
-            <div class="big-number text-green" id="moneyVal">$0</div>
-            <div class="sub-text">Based on keyword density</div>
-        </div>
-
-        <!-- Bounce Rate -->
-        <div class="card">
-            <h3>Bounce Rate (Est)</h3>
-            <div class="big-number text-pink" id="bounceVal">0%</div>
-            <div class="sub-text">Inverse of Speed Score</div>
-        </div>
-
-        <!-- Core Vitals -->
-        <div class="card">
-            <h3>Core Vitals</h3>
-            <div class="metric-row">
-                <span>Speed Score</span>
-                <span id="speedVal" style="font-weight:bold">0</span>
-            </div>
-            <div class="metric-row">
-                <span>Authority</span>
-                <span id="authVal" style="font-weight:bold">0</span>
-            </div>
-            <div class="metric-row">
-                <span>Word Count</span>
-                <span id="wordVal" style="font-weight:bold">0</span>
-            </div>
-        </div>
-
-        <!-- AI Strategist -->
-        <div class="card terminal">
-            <h3>> AI_STRATEGIST_LOG</h3>
-            <div id="aiOutput" class="terminal-text">Waiting for data uplink...</div>
-        </div>
-    </div>
-</div>
-
-<script>
-    async function runAudit() {
-        const url = document.getElementById('urlInput').value;
-        const loader = document.getElementById('loader');
-        const dash = document.getElementById('dashboard');
-        
-        if(!url) return alert("ENTER TARGET URL");
-
-        // UI Reset
-        dash.style.display = 'none';
-        loader.style.display = 'block';
-
-        try {
-            // Call the Vercel API
-            const res = await fetch(`/api/analyze?url=${encodeURIComponent(url)}`);
-            const data = await res.json();
-
-            if(data.error) throw new Error(data.error);
-
-            // Populate Metrics
-            document.getElementById('trafVal').innerText = data.metrics.projected_traffic.toLocaleString();
-            document.getElementById('moneyVal').innerText = '$' + data.metrics.est_ad_value.toLocaleString();
-            document.getElementById('bounceVal').innerText = data.metrics.bounce_rate + '%';
-            
-            document.getElementById('speedVal').innerText = data.metrics.speed_score + '/100';
-            document.getElementById('authVal').innerText = data.metrics.authority_score + '/10';
-            document.getElementById('wordVal').innerText = data.metrics.word_count.toLocaleString();
-
-            // Typewriter effect for AI
-            const aiContainer = document.getElementById('aiOutput');
-            aiContainer.innerText = "";
-            let i = 0;
-            const text = data.ai_strategy;
-            
-            function typeWriter() {
-                if (i < text.length) {
-                    aiContainer.innerHTML += text.charAt(i);
-                    i++;
-                    setTimeout(typeWriter, 15); // Typing speed
-                }
-            }
-            typeWriter();
-
-            // Show Dash
-            loader.style.display = 'none';
-            dash.style.display = 'grid';
-
-        } catch (e) {
-            loader.style.display = 'none';
-            alert("AUDIT FAILURE: " + e.message);
-        }
-    }
-</script>
-
+    <script src="script.js"></script>
 </body>
 </html>
