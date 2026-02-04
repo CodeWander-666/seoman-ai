@@ -3,148 +3,345 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SEO Master Dashboard</title>
+    <title>SEO//VISION - AI ANALYZER</title>
     <style>
-        :root { 
-            --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --muted: #94a3b8; 
-            --accent: #3b82f6; --good: #22c55e; --bad: #ef4444; 
+        :root {
+            --bg-dark: #030712;
+            --glass: rgba(17, 24, 39, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --primary: #06b6d4; /* Cyan */
+            --secondary: #8b5cf6; /* Purple */
+            --success: #10b981; /* Green */
+            --warning: #f59e0b; /* Orange */
+            --danger: #ef4444; /* Red */
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
         }
-        body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 2rem; }
-        
-        /* SEARCH BAR */
-        .header { max-width: 1200px; margin: 0 auto 3rem auto; text-align: center; }
-        .input-group { display: flex; gap: 10px; justify-content: center; max-width: 600px; margin: 20px auto; }
-        input { padding: 15px; width: 100%; border-radius: 8px; border: none; background: var(--card); color: white; font-size: 1rem; border: 1px solid #334155; }
-        button { padding: 15px 30px; border-radius: 8px; border: none; background: var(--accent); color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button:hover { opacity: 0.9; }
 
-        /* THE 5 PILLARS GRID */
-        .dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; max-width: 1200px; margin: 0 auto; display: none; }
-        
-        .card { background: var(--card); padding: 1.5rem; border-radius: 12px; border: 1px solid #334155; position: relative; overflow: hidden; }
-        .card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--accent); }
-        
-        .card h2 { font-size: 1rem; text-transform: uppercase; color: var(--muted); letter-spacing: 1px; margin-top: 0; }
-        .big-number { font-size: 3rem; font-weight: 800; margin: 10px 0; }
-        .stat-row { display: flex; justify-content: space-between; margin-top: 10px; border-bottom: 1px solid #334155; padding-bottom: 5px; }
-        .stat-val { font-weight: bold; }
-        
-        /* SPECIFIC CARD COLORS */
-        .card.strategy::before { background: #8b5cf6; } /* Purple */
-        .card.technical::before { background: #f59e0b; } /* Orange */
-        .card.content::before { background: #22c55e; } /* Green */
-        .card.authority::before { background: #ec4899; } /* Pink */
+        * { box-sizing: border-box; outline: none; }
 
-        /* UTILS */
-        .loader { text-align: center; font-size: 1.2rem; margin-top: 3rem; color: var(--accent); display: none; }
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; background: #334155; }
+        body {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace; /* Terminal feel */
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 20%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* --- LAYOUT --- */
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            letter-spacing: -2px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .subtitle { color: var(--text-muted); font-size: 0.9rem; letter-spacing: 2px; }
+
+        /* --- INPUT HUD --- */
+        .hud-input {
+            display: flex;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 5px;
+            max-width: 700px;
+            margin: 0 auto;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.1);
+            transition: 0.3s;
+        }
+
+        .hud-input:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.3);
+        }
+
+        input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 15px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        button.scan-btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 8px;
+            padding: 0 30px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            letter-spacing: 1px;
+            transition: 0.2s;
+        }
+
+        button.scan-btn:hover { transform: scale(1.05); }
+
+        /* --- GRID DASHBOARD --- */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+            display: none; /* Hidden until loaded */
+        }
+
+        .card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+            transition: transform 0.3s;
+        }
+
+        .card:hover { transform: translateY(-5px); border-color: rgba(255,255,255,0.2); }
+
+        /* Card Header Line */
+        .card::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+        }
+
+        .card h3 {
+            margin: 0 0 20px 0;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* METRICS */
+        .metric-big { font-size: 3rem; font-weight: 700; margin-bottom: 5px; line-height: 1; }
+        .metric-sub { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px; }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.9rem;
+        }
+        .stat-row:last-child { border-bottom: none; }
+        .val { font-weight: bold; color: var(--primary); }
+
+        /* BADGES */
+        .badge {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.1);
+            color: var(--text-main);
+            margin-right: 5px;
+            margin-bottom: 5px;
+            display: inline-block;
+        }
+
+        /* STATUS COLORS */
+        .good { color: var(--success); text-shadow: 0 0 10px rgba(34, 197, 94, 0.4); }
+        .mid { color: var(--warning); }
+        .bad { color: var(--danger); }
+
+        /* LOADER */
+        .loader-box {
+            text-align: center;
+            margin-top: 50px;
+            display: none;
+        }
+        .scanner-line {
+            height: 2px;
+            width: 100%;
+            max-width: 400px;
+            background: var(--primary);
+            margin: 20px auto;
+            position: relative;
+            overflow: hidden;
+            border-radius: 2px;
+        }
+        .scanner-line::after {
+            content: ''; position: absolute; top: 0; left: 0; height: 100%; width: 50%;
+            background: white;
+            box-shadow: 0 0 20px white;
+            animation: scan 1s infinite alternate;
+        }
+
+        @keyframes scan { from { left: 0; } to { left: 100%; } }
+
+        /* KEYWORD CLOUD */
+        .kw-container { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+        .kw-tag { 
+            background: rgba(6, 182, 212, 0.2); 
+            border: 1px solid rgba(6, 182, 212, 0.4); 
+            color: #bef7ff; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; 
+        }
+
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>THE ART OF SEO / ANALYZER</h1>
-        <div class="input-group">
-            <input type="text" id="url" placeholder="Enter URL (e.g. https://example.com)">
-            <button onclick="runAnalysis()">ANALYZE</button>
-        </div>
+<div class="container">
+    <header>
+        <h1>SEO // VISION</h1>
+        <div class="subtitle">AI-POWERED AUDIT PROTOCOL v4.0</div>
+    </header>
+
+    <div class="hud-input">
+        <input type="text" id="urlInput" placeholder="ENTER TARGET URL (e.g. https://stripe.com)">
+        <button class="scan-btn" onclick="initiateScan()">INITIATE SCAN</button>
     </div>
 
-    <div id="loader" class="loader">
-        Querying Google PageSpeed + OpenPageRank + Scraping Content... <br> (Please wait 10-15 seconds)
+    <div id="loader" class="loader-box">
+        <div style="color: var(--primary); letter-spacing: 2px;">ESTABLISHING UPLINK...</div>
+        <div class="scanner-line"></div>
+        <div style="font-size: 0.8rem; color: var(--text-muted);">Parsing DOM • Querying Google API • Calculating Density</div>
     </div>
 
-    <div id="ui" class="dashboard">
-        
-        <div class="card strategy">
-            <h2>1. Strategic Intent</h2>
-            <div class="big-number" id="intent_type">--</div>
-            <p id="intent_desc" style="color: var(--muted)">Analyzing keywords...</p>
-            <div class="stat-row"><span>Status Code</span> <span class="stat-val" id="status_code">--</span></div>
-            <div class="stat-row"><span>Server</span> <span class="stat-val" id="server">--</span></div>
-        </div>
+    <div id="dashboard" class="grid">
 
-        <div class="card technical">
-            <h2>2. Technical Health</h2>
-            <div class="big-number" id="perf_score">--</div>
-            <div class="stat-row"><span>Load Time (LCP)</span> <span class="stat-val" id="lcp">--</span></div>
-            <div class="stat-row"><span>Stability (CLS)</span> <span class="stat-val" id="cls">--</span></div>
-            <div class="stat-row"><span>Mobile Friendly</span> <span class="stat-val badge" id="mobile">Pass</span></div>
-        </div>
-
-        <div class="card content">
-            <h2>3. Content Depth</h2>
-            <div class="big-number" id="read_score">--</div>
-            <p style="color: var(--muted)">Readability Score (0-100)</p>
-            <div class="stat-row"><span>Word Count</span> <span class="stat-val" id="words">--</span></div>
-            <div class="stat-row"><span>Title Length</span> <span class="stat-val" id="title_len">--</span></div>
-            <div class="stat-row"><span>Meta Desc</span> <span class="stat-val" id="has_desc">--</span></div>
-        </div>
-
-        <div class="card authority">
-            <h2>4. Authority (Off-Page)</h2>
-            <div class="big-number" id="auth_score">--</div>
-            <p style="color: var(--muted)">OpenPageRank Score (0-10)</p>
-            <div class="stat-row"><span>Global Rank</span> <span class="stat-val" id="global_rank">--</span></div>
-            <div class="stat-row"><span>Domain</span> <span class="stat-val" id="domain_name">--</span></div>
-        </div>
-
-    </div>
-
-    <script>
-        async function runAnalysis() {
-            const url = document.getElementById('url').value;
-            const ui = document.getElementById('ui');
-            const loader = document.getElementById('loader');
+        <div class="card" style="border-top: 2px solid var(--secondary);">
+            <h3><span style="color:var(--secondary)">●</span> INTELLIGENCE</h3>
+            <div class="metric-big" id="intentVal">--</div>
+            <div class="metric-sub">DETECTED INTENT</div>
             
-            // ⚠️ REPLACE THIS WITH YOUR FINAL VERCEL URL AFTER DEPLOYMENT ⚠️
-            const API_ENDPOINT = "https://seoman-ai.vercel.app/api/analyze"; 
+            <div class="stat-row"><span>Server Status</span> <span class="val" id="statusVal">200 OK</span></div>
+            <div class="stat-row"><span>Server Tech</span> <span class="val" id="serverVal">Unknown</span></div>
+        </div>
 
-            if(!url) return alert("Enter a URL");
+        <div class="card" style="border-top: 2px solid var(--warning);">
+            <h3><span style="color:var(--warning)">●</span> CORE VITALS</h3>
+            <div class="metric-big" id="speedScore">--</div>
+            <div class="metric-sub">PERFORMANCE SCORE</div>
 
-            ui.style.display = 'none';
-            loader.style.display = 'block';
+            <div class="stat-row"><span>LCP (Load)</span> <span class="val" id="lcpVal">--</span></div>
+            <div class="stat-row"><span>CLS (Shift)</span> <span class="val" id="clsVal">--</span></div>
+        </div>
 
-            try {
-                const res = await fetch(`${API_ENDPOINT}?url=${encodeURIComponent(url)}`);
-                const data = await res.json();
+        <div class="card" style="border-top: 2px solid var(--success);">
+            <h3><span style="color:var(--success)">●</span> CONTENT MATRIX</h3>
+            <div class="metric-big" id="readScore">--</div>
+            <div class="metric-sub">READABILITY INDEX</div>
 
-                // 1. STRATEGY
-                document.getElementById('intent_type').innerText = data.strategy.intent;
-                document.getElementById('intent_desc').innerText = `Probable user goal: ${data.strategy.intent}`;
-                document.getElementById('status_code').innerText = data.strategy.status;
-                document.getElementById('server').innerText = data.strategy.server;
+            <div class="stat-row"><span>Word Count</span> <span class="val" id="wordCount">--</span></div>
+            <div class="stat-row"><span>Internal Links</span> <span class="val" id="inLinks">--</span></div>
+            <div class="stat-row"><span>External Links</span> <span class="val" id="outLinks">--</span></div>
+            <div class="stat-row"><span>Social Tags</span> <span class="val" id="socialTag">--</span></div>
+        </div>
 
-                // 2. TECHNICAL
-                const tech = data.technical;
-                const score = document.getElementById('perf_score');
-                score.innerText = tech.speed_score;
-                score.style.color = tech.speed_score > 89 ? '#22c55e' : (tech.speed_score > 49 ? '#f59e0b' : '#ef4444');
-                document.getElementById('lcp').innerText = tech.lcp;
-                document.getElementById('cls').innerText = tech.cls;
+        <div class="card" style="border-top: 2px solid var(--primary);">
+            <h3><span style="color:var(--primary)">●</span> KEYWORD DENSITY</h3>
+            <div class="kw-container" id="keywordZone">
+                </div>
+            <div style="margin-top: 20px; font-size: 0.8rem; color: var(--text-muted);">
+                Top 5 semantic entities extracted from DOM text nodes.
+            </div>
+        </div>
 
-                // 3. CONTENT
-                const cont = data.content;
-                document.getElementById('read_score').innerText = cont.readability;
-                document.getElementById('words').innerText = cont.word_count;
-                document.getElementById('title_len').innerText = `${cont.title_len} chars`;
-                document.getElementById('has_desc').innerText = cont.description ? "✅ Found" : "❌ Missing";
+        <div class="card" style="border-top: 2px solid #ec4899;">
+            <h3><span style="color:#ec4899">●</span> AUTHORITY</h3>
+            <div class="metric-big" id="authScore">--</div>
+            <div class="metric-sub">PAGE RANK (0-10)</div>
 
-                // 4. AUTHORITY
-                const auth = data.authority;
-                document.getElementById('auth_score').innerText = auth.page_rank;
-                document.getElementById('global_rank').innerText = auth.rank !== "N/A" ? "#" + Number(auth.rank).toLocaleString() : "Unranked";
-                document.getElementById('domain_name').innerText = auth.domain;
+            <div class="stat-row"><span>Global Rank</span> <span class="val" id="globalRank">--</span></div>
+            <div class="stat-row"><span>Domain</span> <span class="val" id="domainName">--</span></div>
+        </div>
 
-                loader.style.display = 'none';
-                ui.style.display = 'grid';
+    </div>
+</div>
 
-            } catch (err) {
-                alert("Analysis failed. Check console.");
-                console.error(err);
-                loader.style.display = 'none';
+<script>
+    // ⚠️ ⚠️ REPLACE THIS URL WITH YOUR VERCEL LINK ⚠️ ⚠️
+    const API_ENDPOINT = "https://seoman-ai.vercel.app/api/analyze";
+
+    async function initiateScan() {
+        const url = document.getElementById('urlInput').value;
+        const dash = document.getElementById('dashboard');
+        const loader = document.getElementById('loader');
+
+        if(!url) return alert("NO TARGET SPECIFIED");
+
+        // UI STATE: LOADING
+        dash.style.display = 'none';
+        loader.style.display = 'block';
+
+        try {
+            const res = await fetch(`${API_ENDPOINT}?url=${encodeURIComponent(url)}`);
+            const data = await res.json();
+
+            // 1. STRATEGY
+            const strat = data.strategy || {};
+            document.getElementById('intentVal').innerText = strat.intent || "Unknown";
+            document.getElementById('statusVal').innerText = strat.status || "Error";
+            document.getElementById('serverVal').innerText = (strat.server || "N/A").substring(0, 15);
+
+            // 2. TECHNICAL
+            const tech = data.technical || {};
+            const score = tech.speed_score || 0;
+            const scoreEl = document.getElementById('speedScore');
+            scoreEl.innerText = score;
+            scoreEl.className = `metric-big ${score > 89 ? 'good' : (score > 49 ? 'mid' : 'bad')}`;
+            document.getElementById('lcpVal').innerText = tech.lcp || "N/A";
+            document.getElementById('clsVal').innerText = tech.cls || "N/A";
+
+            // 3. CONTENT
+            const cont = data.content || {};
+            document.getElementById('readScore').innerText = cont.readability || 0;
+            document.getElementById('wordCount').innerText = cont.word_count || 0;
+            document.getElementById('inLinks').innerText = cont.links_internal || 0;
+            document.getElementById('outLinks').innerText = cont.links_external || 0;
+            document.getElementById('socialTag').innerText = cont.social_image ? "ACTIVE" : "MISSING";
+
+            // 4. KEYWORDS
+            const kwZone = document.getElementById('keywordZone');
+            kwZone.innerHTML = "";
+            if (cont.keywords && cont.keywords.length > 0) {
+                cont.keywords.forEach(([word, count]) => {
+                    kwZone.innerHTML += `<div class="kw-tag">${word.toUpperCase()} (${count})</div>`;
+                });
+            } else {
+                kwZone.innerHTML = "<div style='color:gray'>NO SIGNAL DETECTED</div>";
             }
+
+            // 5. AUTHORITY
+            const auth = data.authority || {};
+            document.getElementById('authScore').innerText = auth.page_rank || 0;
+            document.getElementById('globalRank').innerText = auth.rank || "Unranked";
+            document.getElementById('domainName').innerText = auth.domain || "Unknown";
+
+            // UI STATE: SUCCESS
+            loader.style.display = 'none';
+            dash.style.display = 'grid';
+
+        } catch (err) {
+            console.error(err);
+            alert("SYSTEM ERROR: " + err.message);
+            loader.style.display = 'none';
         }
-    </script>
+    }
+</script>
+
 </body>
 </html>
