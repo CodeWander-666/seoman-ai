@@ -3,189 +3,286 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SEO VISION PRO</title>
+    <title>SEO // VISION PRO</title>
     <style>
         :root {
             --bg: #030712;
-            --neon-cyan: #06b6d4;
-            --neon-purple: #8b5cf6;
-            --text: #e5e7eb;
+            --glass: rgba(17, 24, 39, 0.7);
+            --border: rgba(255, 255, 255, 0.08);
+            --primary: #06b6d4;
+            --purple: #8b5cf6;
+            --pink: #ec4899;
+            --green: #10b981;
+            --text: #f8fafc;
+            --muted: #94a3b8;
         }
+
         body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: 'Courier New', monospace;
             margin: 0;
+            background: var(--bg);
+            font-family: 'Courier New', Courier, monospace;
+            color: var(--text);
             padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(6, 182, 212, 0.05), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.05), transparent 25%);
         }
-       .hud-container {
-            width: 100%;
-            max-width: 1000px;
+
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        /* Header & Input */
+        header {
             text-align: center;
             margin-bottom: 40px;
-        }
-       .input-group {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        input {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--neon-cyan);
-            color: var(--neon-cyan);
-            padding: 12px 20px;
-            font-family: inherit;
-            font-size: 1.2rem;
-            width: 60%;
-            outline: none;
-        }
-        button {
-            background: var(--neon-purple);
-            border: none;
-            color: white;
-            padding: 12px 30px;
-            font-family: inherit;
-            font-size: 1.2rem;
-            cursor: pointer;
-            font-weight: bold;
-            text-transform: uppercase;
-            box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
-        }
-        button:hover {
-            box-shadow: 0 0 25px rgba(139, 92, 246, 0.8);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 20px;
         }
         
-        /* The Grid */
-       .dashboard {
-            display: none; /* Hidden by default */
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            width: 100%;
-            max-width: 1200px;
+        h1 {
+            font-size: 2rem;
+            letter-spacing: -1px;
+            margin-bottom: 5px;
         }
-       .card {
-            background: rgba(17, 24, 39, 0.8);
-            border: 1px solid rgba(255,255,255,0.1);
-            padding: 20px;
-            position: relative;
-            overflow: hidden;
-        }
-       .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
-        }
-       .metric-label {
-            color: #9ca3af;
+        
+        .badge {
+            background: rgba(6, 182, 212, 0.1);
+            color: var(--primary);
+            padding: 2px 8px;
+            border-radius: 4px;
             font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            border: 1px solid rgba(6, 182, 212, 0.2);
         }
-       .metric-value {
+
+        .input-group {
+            display: flex;
+            max-width: 600px;
+            margin: 30px auto 0;
+            position: relative;
+        }
+
+        input {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            padding: 15px;
+            color: var(--text);
+            font-family: inherit;
+            border-radius: 6px 0 0 6px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus { border-color: var(--primary); }
+
+        button {
+            background: var(--primary);
+            color: black;
+            border: none;
+            padding: 0 25px;
+            font-weight: bold;
+            font-family: inherit;
+            cursor: pointer;
+            border-radius: 0 6px 6px 0;
+            transition: opacity 0.2s;
+        }
+
+        button:hover { opacity: 0.9; }
+
+        /* Dashboard Grid */
+        #dashboard {
+            display: none;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            padding: 25px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card h3 {
+            margin: 0 0 15px 0;
+            color: var(--muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .big-number {
             font-size: 2.5rem;
             font-weight: bold;
-            margin: 10px 0;
-            text-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+            color: var(--text);
+            margin-bottom: 5px;
         }
-       .ai-terminal {
+
+        .sub-text { font-size: 0.8rem; color: var(--muted); }
+
+        /* Specific Colors */
+        .text-primary { color: var(--primary); }
+        .text-purple { color: var(--purple); }
+        .text-pink { color: var(--pink); }
+        .text-green { color: var(--green); }
+
+        /* Terminal Style for AI */
+        .terminal {
             grid-column: 1 / -1;
-            background: black;
-            border: 1px solid var(--neon-purple);
+            background: rgba(0,0,0,0.5);
+            font-family: 'Courier New', monospace;
             padding: 20px;
-            font-size: 0.9rem;
-            line-height: 1.6;
-            color: #a78bfa;
-            min-height: 100px;
+            border-left: 3px solid var(--purple);
         }
-       .loader {
+        
+        .terminal-text {
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        /* Loader */
+        #loader {
             display: none;
-            color: var(--neon-cyan);
-            font-size: 1.5rem;
+            text-align: center;
             margin-top: 50px;
-            text-shadow: 0 0 10px var(--neon-cyan);
+            color: var(--primary);
+        }
+
+        @keyframes blink { 50% { opacity: 0; } }
+        .cursor { animation: blink 1s infinite; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 5px;
         }
     </style>
 </head>
 <body>
 
-    <div class="hud-container">
-        <h1 style="text-shadow: 0 0 20px rgba(6,182,212,0.5);">SEO // VISION PRO</h1>
+<div class="container">
+    <header>
+        <h1>SEO // VISION PRO <span class="badge">V2.0</span></h1>
+        <p style="color: var(--muted)">SERVERLESS AUDIT SYSTEM</p>
+        
         <div class="input-group">
-            <input type="text" id="urlInput" placeholder="ENTER TARGET URL (e.g. apple.com)">
-            <button onclick="initiateScan()">SCAN</button>
+            <input type="text" id="urlInput" placeholder="https://example.com" value="https://example.com">
+            <button onclick="runAudit()">SCAN TARGET</button>
         </div>
+    </header>
+
+    <div id="loader">
+        [ SYSTEM ANALYZING ]<span class="cursor">_</span>
+        <br>
+        <small style="color:var(--muted)">Connecting to Neural Network...</small>
     </div>
 
-    <div id="loader" class="loader">
-       
+    <div id="dashboard">
+        <!-- Traffic Holodeck -->
+        <div class="card">
+            <h3>Projected Traffic</h3>
+            <div class="big-number text-primary" id="trafVal">0</div>
+            <div class="sub-text">Monthly Visits (Est)</div>
+        </div>
+
+        <!-- Financials -->
+        <div class="card">
+            <h3>Ad Value Estimate</h3>
+            <div class="big-number text-green" id="moneyVal">$0</div>
+            <div class="sub-text">Based on keyword density</div>
+        </div>
+
+        <!-- Bounce Rate -->
+        <div class="card">
+            <h3>Bounce Rate (Est)</h3>
+            <div class="big-number text-pink" id="bounceVal">0%</div>
+            <div class="sub-text">Inverse of Speed Score</div>
+        </div>
+
+        <!-- Core Vitals -->
+        <div class="card">
+            <h3>Core Vitals</h3>
+            <div class="metric-row">
+                <span>Speed Score</span>
+                <span id="speedVal" style="font-weight:bold">0</span>
+            </div>
+            <div class="metric-row">
+                <span>Authority</span>
+                <span id="authVal" style="font-weight:bold">0</span>
+            </div>
+            <div class="metric-row">
+                <span>Word Count</span>
+                <span id="wordVal" style="font-weight:bold">0</span>
+            </div>
+        </div>
+
+        <!-- AI Strategist -->
+        <div class="card terminal">
+            <h3>> AI_STRATEGIST_LOG</h3>
+            <div id="aiOutput" class="terminal-text">Waiting for data uplink...</div>
+        </div>
     </div>
+</div>
 
-    <div id="dashboard" class="dashboard" style="display:none;">
-        <div class="card">
-            <div class="metric-label">Proj. Monthly Traffic</div>
-            <div class="metric-value" id="val-traffic">0</div>
-        </div>
+<script>
+    async function runAudit() {
+        const url = document.getElementById('urlInput').value;
+        const loader = document.getElementById('loader');
+        const dash = document.getElementById('dashboard');
+        
+        if(!url) return alert("ENTER TARGET URL");
 
-        <div class="card">
-            <div class="metric-label">Est. Ad Value</div>
-            <div class="metric-value" style="color: #f59e0b;" id="val-value">$0.00</div>
-        </div>
+        // UI Reset
+        dash.style.display = 'none';
+        loader.style.display = 'block';
 
-        <div class="card">
-            <div class="metric-label">Bounce Rate</div>
-            <div class="metric-value" style="color: #ec4899;" id="val-bounce">0%</div>
-        </div>
+        try {
+            // Call the Vercel API
+            const res = await fetch(`/api/analyze?url=${encodeURIComponent(url)}`);
+            const data = await res.json();
 
-        <div class="card">
-            <div class="metric-label">Speed Score</div>
-            <div class="metric-value" id="val-speed">0</div>
-        </div>
+            if(data.error) throw new Error(data.error);
 
-        <div class="ai-terminal">
-            <div class="metric-label" style="color:white; margin-bottom:10px;">>> AI STRATEGIC ADVISOR</div>
-            <div id="val-ai">Waiting for uplink...</div>
-        </div>
-    </div>
+            // Populate Metrics
+            document.getElementById('trafVal').innerText = data.metrics.projected_traffic.toLocaleString();
+            document.getElementById('moneyVal').innerText = '$' + data.metrics.est_ad_value.toLocaleString();
+            document.getElementById('bounceVal').innerText = data.metrics.bounce_rate + '%';
+            
+            document.getElementById('speedVal').innerText = data.metrics.speed_score + '/100';
+            document.getElementById('authVal').innerText = data.metrics.authority_score + '/10';
+            document.getElementById('wordVal').innerText = data.metrics.word_count.toLocaleString();
 
-    <script>
-        async function initiateScan() {
-            const url = document.getElementById('urlInput').value;
-            if(!url) return alert("INPUT REQUIRED");
-
-            document.getElementById('dashboard').style.display = 'none';
-            document.getElementById('loader').style.display = 'block';
-
-            try {
-                const res = await fetch(`/api/analyze?url=${encodeURIComponent(url)}`);
-                const data = await res.json();
-
-                if(data.error) throw new Error(data.error);
-
-                // Populate Data
-                document.getElementById('val-traffic').innerText = data.metrics.traffic;
-                document.getElementById('val-value').innerText = data.metrics.ad_value;
-                document.getElementById('val-bounce').innerText = data.metrics.bounce_rate;
-                document.getElementById('val-speed').innerText = data.metrics.speed;
-                document.getElementById('val-ai').innerText = data.ai_analysis;
-
-                document.getElementById('loader').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'grid';
-
-            } catch (e) {
-                alert("SYSTEM ERROR: " + e.message);
-                document.getElementById('loader').style.display = 'none';
+            // Typewriter effect for AI
+            const aiContainer = document.getElementById('aiOutput');
+            aiContainer.innerText = "";
+            let i = 0;
+            const text = data.ai_strategy;
+            
+            function typeWriter() {
+                if (i < text.length) {
+                    aiContainer.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(typeWriter, 15); // Typing speed
+                }
             }
+            typeWriter();
+
+            // Show Dash
+            loader.style.display = 'none';
+            dash.style.display = 'grid';
+
+        } catch (e) {
+            loader.style.display = 'none';
+            alert("AUDIT FAILURE: " + e.message);
         }
-    </script>
+    }
+</script>
+
 </body>
 </html>
