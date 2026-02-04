@@ -1,84 +1,90 @@
 from flask import Flask, request, jsonify, make_response
-import requests
-from bs4 import BeautifulSoup
-import os
 
+# Initialize Flask globally - this MUST happen for Vercel to see it
 app = Flask(__name__)
 
-# --- CONFIG ---
-# If keys are missing, we default to None to prevent startup crashes
-GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
-OPR_API_KEY = os.environ.get("OPR_API_KEY")
+# --- CORS Helper ---
+def cors_response(data, status=200):
+    response = make_response(jsonify(data), status)
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add("Access-Control-Allow-Methods", "GET, OPTIONS")
+    return response
 
-def cors_response(data, code=200):
-    resp = make_response(jsonify(data), code)
-    resp.headers["Access-Control-Allow-Origin"] = "*"
-    resp.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
-    return resp
-
+# --- Main Route ---
 @app.route('/api/analyze', methods=['GET', 'OPTIONS'])
-def handler():
+def analyze():
+    # 1. Handle Preflight
     if request.method == "OPTIONS":
         return cors_response({"ok": True})
-    
-    # 1. Input Validation
+
+    # 2. Lazy Imports (Prevents "Startup Crash" if libraries fail)
+    import os
+    try:
+        import requests
+        from bs4 import BeautifulSoup
+    except ImportError as e:
+        return cors_response({"error": f"Library Missing: {str(e)}"}, 500)
+
+    # 3. Get Keys
+    GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
+    OPR_API_KEY = os.environ.get("OPR_API_KEY")
+
+    # 4. Input Check
     url = request.args.get('url')
-    if not url:
-        return cors_response({"error": "No URL provided"}, 400)
-    if not url.startswith('http'):
-        url = 'https://' + url
+    if not url: return cors_response({"error": "No URL provided"}, 400)
+    if not url.startswith('http'): url = 'https://' + url
 
-    results = {}
+    output = {}
 
-    # 2. Safe Scraping
+    # 5. Logic: Strategy & Content
     try:
         headers = {'User-Agent': 'SEO-Bot/1.0'}
-        page = requests.get(url, headers=headers, timeout=5)
-        soup = BeautifulSoup(page.text, 'html.parser')
+        resp = requests.get(url, headers=headers, timeout=9)
+        soup = BeautifulSoup(resp.text, 'html.parser')
+        text = soup.get_text(" ", strip=True)
         
-        # Basic Content Checks
-        title = soup.title.string if soup.title else "No Title"
-        desc_tag = soup.find('meta', attrs={'name': 'description'})
-        has_desc = bool(desc_tag)
-        
-        results['strategy'] = {"intent": "General", "status": page.status_code, "server": "Unknown"}
-        results['content'] = {
-            "title_len": len(title),
-            "description": has_desc,
-            "word_count": len(soup.get_text().split()),
-            "readability": "N/A"
+        # Intent Logic
+        blob = (soup.title.string or "") + " " + text[:500]
+        intent = "Navigational"
+        if any(x in blob.lower() for x in ['buy', 'price', 'cart', 'sale']): intent = "Transactional"
+        elif any(x in blob.lower() for x in ['how', 'guide', 'tips']): intent = "Informational"
+
+        output['strategy'] = { "intent": intent, "status": resp.status_code }
+        output['content'] = { 
+            "word_count": len(text.split()), 
+            "readability": "N/A", 
+            "title_len": len(soup.title.string) if soup.title else 0,
+            "description": bool(soup.find('meta', attrs={'name': 'description'}))
         }
     except Exception as e:
-        results['strategy'] = {"error": str(e)}
-        results['content'] = {"error": "Scrape Failed"}
+        output['strategy'] = {"error": str(e)}
+        output['content'] = {"error": "Scrape Failed"}
 
-    # 3. Google API (With Safety Check)
+    # 6. Logic: Technical (Google)
     try:
         if GOOGLE_API_KEY:
-            # We use a mocked request if key is present but fails
             g_url = f"https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={url}&strategy=mobile&key={GOOGLE_API_KEY}"
-            g_data = requests.get(g_url).json()
-            if 'lighthouseResult' in g_data:
-                score = g_data['lighthouseResult']['categories']['performance']['score'] * 100
-                results['technical'] = {"speed_score": int(score), "lcp": "2.5s", "cls": "0.1"}
-            else:
-                results['technical'] = {"speed_score": 0, "error": "Google API Limit"}
+            g_data = requests.get(g_url).json().get('lighthouseResult', {})
+            output['technical'] = {
+                "speed_score": int(g_data.get('categories',{}).get('performance',{}).get('score',0)*100),
+                "lcp": g_data.get('audits',{}).get('largest-contentful-paint',{}).get('displayValue','N/A'),
+                "cls": g_data.get('audits',{}).get('cumulative-layout-shift',{}).get('displayValue','N/A')
+            }
         else:
-            results['technical'] = {"error": "No Google Key Configured"}
+            output['technical'] = {"error": "No Google Key"}
     except:
-        results['technical'] = {"speed_score": 0, "error": "API Crash"}
+        output['technical'] = {"speed_score": 0, "error": "Google API Fail"}
 
-    # 4. Authority (With Safety Check)
+    # 7. Logic: Authority (OPR)
     try:
         if OPR_API_KEY:
-            results['authority'] = {"page_rank": 5, "rank": "Est. High", "domain": "Simulated"}
+            domain = url.split("//")[-1].split("/")[0].replace("www.", "")
+            opr = requests.get(f"https://openpagerank.com/api/v1.0/getPageRank?domains[]={domain}", headers={'API-OPR': OPR_API_KEY}).json()
+            d = opr['response'][0]
+            output['authority'] = { "page_rank": d['page_rank_decimal'] or 0, "rank": d['rank'], "domain": d['domain'] }
         else:
-            results['authority'] = {"error": "No OPR Key Configured"}
+            output['authority'] = {"page_rank": 0, "rank": "N/A"}
     except:
-        results['authority'] = {"error": "Auth Crash"}
+        output['authority'] = {"page_rank": 0, "rank": "N/A"}
 
-    return cors_response(results)
-
-# Vercel needs this
-if __name__ == '__main__':
-    app.run()
+    return cors_response(output)
