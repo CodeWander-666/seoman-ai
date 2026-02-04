@@ -3,278 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SEO // VISION PRO</title>
+    <title>SEO VISION PRO</title>
     <style>
         :root {
             --bg: #030712;
-            --glass: rgba(17, 24, 39, 0.7);
-            --border: rgba(255, 255, 255, 0.08);
-            --primary: #06b6d4;
-            --purple: #8b5cf6;
-            --pink: #ec4899;
-            --green: #10b981;
-            --gold: #f59e0b;
-            --text: #f8fafc;
-            --muted: #94a3b8;
+            --neon-cyan: #06b6d4;
+            --neon-purple: #8b5cf6;
+            --text: #e5e7eb;
         }
-
         body {
-            margin: 0;
-            background: var(--bg);
-            background-image: 
-                radial-gradient(circle at 15% 50%, rgba(6, 182, 212, 0.08), transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
-            font-family: 'Courier New', Courier, monospace;
+            background-color: var(--bg);
             color: var(--text);
+            font-family: 'Courier New', monospace;
+            margin: 0;
             padding: 20px;
-        }
-
-        .container { max-width: 1400px; margin: 0 auto; }
-
-        /* HEADER */
-        header { text-align: center; margin-bottom: 40px; }
-        h1 { 
-            font-size: 2rem; margin: 0; 
-            background: linear-gradient(to right, var(--primary), var(--purple));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            letter-spacing: -1px;
-        }
-        .tagline { color: var(--muted); font-size: 0.8rem; letter-spacing: 2px; margin-top: 5px; }
-
-        /* INPUT HUD */
-        .hud-input {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            border-radius: 50px;
-            padding: 5px;
             display: flex;
-            max-width: 600px;
-            margin: 0 auto 50px auto;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 20px rgba(6, 182, 212, 0.1);
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+       .hud-container {
+            width: 100%;
+            max-width: 1000px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+       .input-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
         }
         input {
-            flex: 1; background: transparent; border: none; color: white;
-            padding: 15px 25px; font-family: inherit; font-size: 1rem;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 12px 20px;
+            font-family: inherit;
+            font-size: 1.2rem;
+            width: 60%;
+            outline: none;
         }
-        input:focus { outline: none; }
         button {
-            background: linear-gradient(135deg, var(--primary), var(--purple));
-            border: none; border-radius: 40px; padding: 0 35px; color: white;
-            font-weight: bold; cursor: pointer; transition: 0.3s;
+            background: var(--neon-purple);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            font-family: inherit;
+            font-size: 1.2rem;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
         }
-        button:hover { transform: scale(1.05); box-shadow: 0 0 15px var(--primary); }
-
-        /* GRID SYSTEM */
-        .grid {
+        button:hover {
+            box-shadow: 0 0 25px rgba(139, 92, 246, 0.8);
+        }
+        
+        /* The Grid */
+       .dashboard {
+            display: none; /* Hidden by default */
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
-            display: none; /* Hidden until loaded */
+            width: 100%;
+            max-width: 1200px;
         }
-
-        .card {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 25px;
+       .card {
+            background: rgba(17, 24, 39, 0.8);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 20px;
             position: relative;
-            backdrop-filter: blur(12px);
+            overflow: hidden;
         }
-
-        .card-header {
-            font-size: 0.75rem; color: var(--muted); letter-spacing: 2px;
-            margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+       .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
         }
-        .dot { width: 8px; height: 8px; border-radius: 50%; }
-
-        /* METRICS */
-        .big-val { font-size: 2.5rem; font-weight: 700; line-height: 1; margin-bottom: 5px; }
-        .sub-val { font-size: 0.85rem; color: var(--muted); margin-bottom: 20px; }
-
-        .row {
-            display: flex; justify-content: space-between; padding: 8px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.9rem;
+       .metric-label {
+            color: #9ca3af;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
-        .row:last-child { border-bottom: none; }
-        .row-k { color: var(--muted); }
-        .row-v { font-weight: bold; }
-
-        /* TAGS */
-        .tag-box { display: flex; flex-wrap: wrap; gap: 6px; }
-        .tag {
-            font-size: 0.7rem; padding: 4px 10px; border-radius: 4px;
-            background: rgba(255,255,255,0.05); color: var(--muted);
+       .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
         }
-        .tag-money { color: var(--gold); border: 1px solid rgba(245, 158, 11, 0.2); }
-
-        /* ENTERPRISE SECTIONS */
-        .wide { grid-column: span 1; }
-        @media(min-width: 900px) { .wide { grid-column: span 2; } }
-
-        /* AI BOX */
-        .ai-box {
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), transparent);
-            border: 1px solid rgba(139, 92, 246, 0.3);
+       .ai-terminal {
+            grid-column: 1 / -1;
+            background: black;
+            border: 1px solid var(--neon-purple);
+            padding: 20px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #a78bfa;
+            min-height: 100px;
         }
-        .ai-text { font-size: 1.1rem; line-height: 1.6; color: #e2e8f0; }
-
-        /* LOADER */
-        #loader { text-align: center; margin-top: 100px; display: none; }
-        .scan-line {
-            width: 200px; height: 2px; background: var(--primary); margin: 20px auto;
-            position: relative; overflow: hidden;
+       .loader {
+            display: none;
+            color: var(--neon-cyan);
+            font-size: 1.5rem;
+            margin-top: 50px;
+            text-shadow: 0 0 10px var(--neon-cyan);
         }
-        .scan-line::after {
-            content: ''; position: absolute; left: -50%; width: 50%; height: 100%;
-            background: white; animation: scan 1.5s infinite;
-        }
-        @keyframes scan { 0% { left: -50%; } 100% { left: 100%; } }
-
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1>SEO // VISION PRO</h1>
-        <div class="tagline">ENTERPRISE AUDIT PROTOCOL v5.0</div>
-    </header>
-
-    <div class="hud-input">
-        <input type="text" id="urlInput" placeholder="ENTER TARGET URL (e.g. stripe.com)">
-        <button onclick="runAudit()">INITIATE SCAN</button>
+    <div class="hud-container">
+        <h1 style="text-shadow: 0 0 20px rgba(6,182,212,0.5);">SEO // VISION PRO</h1>
+        <div class="input-group">
+            <input type="text" id="urlInput" placeholder="ENTER TARGET URL (e.g. apple.com)">
+            <button onclick="initiateScan()">SCAN</button>
+        </div>
     </div>
 
-    <div id="loader">
-        <div style="color:var(--primary)">ESTABLISHING SATELLITE UPLINK...</div>
-        <div class="scan-line"></div>
+    <div id="loader" class="loader">
+       
     </div>
 
-    <div id="dashboard" class="grid">
-        
-        <div class="card wide ai-box">
-            <div class="card-header"><span class="dot" style="background:var(--purple)"></span> AI STRATEGIC ADVISOR</div>
-            <div id="aiOutput" class="ai-text">Waiting for data stream...</div>
+    <div id="dashboard" class="dashboard" style="display:none;">
+        <div class="card">
+            <div class="metric-label">Proj. Monthly Traffic</div>
+            <div class="metric-value" id="val-traffic">0</div>
         </div>
 
         <div class="card">
-            <div class="card-header"><span class="dot" style="background:var(--primary)"></span> GSC // TRAFFIC PROJECTION</div>
-            <div class="big-val" id="gscTraffic">--</div>
-            <div class="sub-val">EST. MONTHLY VISITS</div>
-            <div class="row"><span class="row-k">Impressions</span> <span class="row-v" id="gscImpressions">--</span></div>
-            <div class="row"><span class="row-k">Ranking Potential</span> <span class="row-v" id="gscRank">--</span></div>
+            <div class="metric-label">Est. Ad Value</div>
+            <div class="metric-value" style="color: #f59e0b;" id="val-value">$0.00</div>
         </div>
 
         <div class="card">
-            <div class="card-header"><span class="dot" style="background:var(--gold)"></span> GA4 // BEHAVIOR</div>
-            <div class="big-val" id="gaBounce">--</div>
-            <div class="sub-val">EST. BOUNCE RATE</div>
-            <div class="row"><span class="row-k">Session Duration</span> <span class="row-v" id="gaSession">--</span></div>
-            <div class="row"><span class="row-k">UX Score</span> <span class="row-v" id="gaUX">--</span></div>
+            <div class="metric-label">Bounce Rate</div>
+            <div class="metric-value" style="color: #ec4899;" id="val-bounce">0%</div>
         </div>
 
         <div class="card">
-            <div class="card-header"><span class="dot" style="background:var(--green)"></span> ADS // CPC VALUE</div>
-            <div class="tag-box" id="cpcBox">
-                </div>
-            <div style="margin-top:15px; font-size:0.7rem; color:var(--muted)">
-                *Estimated Cost Per Click based on keyword complexity.
-            </div>
+            <div class="metric-label">Speed Score</div>
+            <div class="metric-value" id="val-speed">0</div>
         </div>
 
-        <div class="card">
-            <div class="card-header"><span class="dot" style="background:var(--pink)"></span> CORE VITALS</div>
-            <div class="big-val" id="speedScore">--</div>
-            <div class="sub-val">PERFORMANCE SCORE</div>
-            <div class="row"><span class="row-k">LCP (Load)</span> <span class="row-v" id="lcpVal">--</span></div>
-            <div class="row"><span class="row-k">CLS (Shift)</span> <span class="row-v" id="clsVal">--</span></div>
+        <div class="ai-terminal">
+            <div class="metric-label" style="color:white; margin-bottom:10px;">>> AI STRATEGIC ADVISOR</div>
+            <div id="val-ai">Waiting for uplink...</div>
         </div>
-
-        <div class="card">
-            <div class="card-header"><span class="dot" style="background:white"></span> CRAWL STATS</div>
-            <div class="row"><span class="row-k">Word Count</span> <span class="row-v" id="wordCount">--</span></div>
-            <div class="row"><span class="row-k">Readability</span> <span class="row-v" id="readScore">--</span></div>
-            <div class="row"><span class="row-k">Internal Links</span> <span class="row-v" id="inLinks">--</span></div>
-            <div class="row"><span class="row-k">Intent</span> <span class="row-v" id="intentVal">--</span></div>
-        </div>
-
     </div>
-</div>
 
-<script>
-    // ⚠️ REPLACE THIS WITH YOUR VERCEL URL
-    const API_URL = "https://seoman-ai.vercel.app/api/analyze";
+    <script>
+        async function initiateScan() {
+            const url = document.getElementById('urlInput').value;
+            if(!url) return alert("INPUT REQUIRED");
 
-    async function runAudit() {
-        const url = document.getElementById('urlInput').value;
-        const dash = document.getElementById('dashboard');
-        const loader = document.getElementById('loader');
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('loader').style.display = 'block';
 
-        if(!url) return alert("ENTER URL");
+            try {
+                const res = await fetch(`/api/analyze?url=${encodeURIComponent(url)}`);
+                const data = await res.json();
 
-        dash.style.display = 'none';
-        loader.style.display = 'block';
+                if(data.error) throw new Error(data.error);
 
-        try {
-            const res = await fetch(`${API_URL}?url=${encodeURIComponent(url)}`);
-            const data = await res.json();
+                // Populate Data
+                document.getElementById('val-traffic').innerText = data.metrics.traffic;
+                document.getElementById('val-value').innerText = data.metrics.ad_value;
+                document.getElementById('val-bounce').innerText = data.metrics.bounce_rate;
+                document.getElementById('val-speed').innerText = data.metrics.speed;
+                document.getElementById('val-ai').innerText = data.ai_analysis;
 
-            // 1. AI STRATEGY
-            document.getElementById('aiOutput').innerText = data.ai_strategy || "Analysis Complete.";
+                document.getElementById('loader').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'grid';
 
-            // 2. ENTERPRISE DATA (The New Stuff!)
-            const ent = data.enterprise || {};
-            const gsc = ent.search_console_projection || {};
-            const ga = ent.analytics_projection || {};
-            const ads = ent.ads_planner || {};
-
-            // GSC
-            document.getElementById('gscTraffic').innerText = gsc.est_monthly_traffic?.toLocaleString() || "0";
-            document.getElementById('gscImpressions').innerText = gsc.est_impressions?.toLocaleString() || "0";
-            document.getElementById('gscRank').innerText = gsc.ranking_potential || "N/A";
-
-            // GA4
-            document.getElementById('gaBounce').innerText = ga.est_bounce_rate || "--";
-            document.getElementById('gaSession').innerText = ga.est_session_duration || "--";
-            document.getElementById('gaUX').innerText = ga.user_experience || "--";
-
-            // ADS (CPC)
-            const cpcContainer = document.getElementById('cpcBox');
-            cpcContainer.innerHTML = "";
-            if(ads.top_opportunities && ads.top_opportunities.length > 0) {
-                ads.top_opportunities.forEach(item => {
-                    cpcContainer.innerHTML += `
-                        <div class="tag tag-money">
-                            ${item.keyword.toUpperCase()} <span style="color:white">(${item.est_cpc})</span>
-                        </div>`;
-                });
-            } else {
-                cpcContainer.innerHTML = "<div class='tag'>No commercial keywords found</div>";
+            } catch (e) {
+                alert("SYSTEM ERROR: " + e.message);
+                document.getElementById('loader').style.display = 'none';
             }
-
-            // 3. TECHNICAL & CONTENT (Standard Data)
-            const tech = data.technical || {};
-            document.getElementById('speedScore').innerText = tech.speed_score || 0;
-            document.getElementById('lcpVal').innerText = tech.lcp || "N/A";
-            document.getElementById('clsVal').innerText = tech.cls || "N/A";
-
-            const cont = data.content || {};
-            document.getElementById('wordCount').innerText = cont.word_count || 0;
-            document.getElementById('readScore').innerText = cont.readability || 0;
-            document.getElementById('inLinks').innerText = cont.links_internal || 0;
-            document.getElementById('intentVal').innerText = data.strategy?.intent || "Unknown";
-
-            // FINISH
-            loader.style.display = 'none';
-            dash.style.display = 'grid';
-
-        } catch (e) {
-            alert("SYSTEM ERROR: " + e.message);
-            loader.style.display = 'none';
         }
-    }
-</script>
-
+    </script>
 </body>
 </html>
