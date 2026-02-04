@@ -8,64 +8,86 @@ class SEOVisionPro {
         console.log('SEO Vision Pro Initialized');
         this.bindEvents();
         this.setupDemo();
+        this.testConnection();
+    }
+
+    async testConnection() {
+        try {
+            const response = await fetch(`${this.baseURL}/api/health`);
+            if (response.ok) {
+                console.log('✅ API is connected');
+            }
+        } catch (error) {
+            console.warn('⚠️ API connection test failed');
+        }
     }
 
     bindEvents() {
-        // Audit button
-        document.getElementById('auditButton').addEventListener('click', () => this.startAudit());
+        const auditBtn = document.getElementById('auditButton');
+        if (auditBtn) {
+            auditBtn.addEventListener('click', () => this.startAudit());
+        }
         
-        // Enter key on input
-        document.getElementById('urlInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.startAudit();
-        });
+        const urlInput = document.getElementById('urlInput');
+        if (urlInput) {
+            urlInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') this.startAudit();
+            });
+        }
         
-        // Other buttons
-        document.getElementById('newAudit').addEventListener('click', () => this.resetAudit());
-        document.getElementById('exportPDF').addEventListener('click', () => this.exportPDF());
+        const newAuditBtn = document.getElementById('newAudit');
+        if (newAuditBtn) {
+            newAuditBtn.addEventListener('click', () => this.resetAudit());
+        }
     }
 
     setupDemo() {
-        // Pre-fill with demo URL for testing
-        const demoUrls = [
-            'https://example.com',
-            'https://google.com',
-            'https://github.com'
-        ];
         const urlInput = document.getElementById('urlInput');
-        urlInput.placeholder = `Try: ${demoUrls[Math.floor(Math.random() * demoUrls.length)]}`;
+        if (urlInput) {
+            const demoUrls = [
+                'https://example.com',
+                'https://google.com',
+                'https://github.com',
+                'https://stackoverflow.com'
+            ];
+            urlInput.placeholder = `Try: ${demoUrls[Math.floor(Math.random() * demoUrls.length)]}`;
+        }
     }
 
     isValidURL(string) {
         try {
-            const url = new URL(string);
-            return url.protocol === 'http:' || url.protocol === 'https:';
-        } catch (_) {
+            new URL(string);
+            return string.startsWith('http://') || string.startsWith('https://');
+        } catch {
             return false;
         }
     }
 
     async startAudit() {
         const urlInput = document.getElementById('urlInput');
-        const url = urlInput.value.trim();
+        const url = urlInput ? urlInput.value.trim() : '';
         
-        // Validate URL
-        if (!this.isValidURL(url)) {
-            this.showNotification('Please enter a valid URL starting with http:// or https://', 'error');
-            urlInput.classList.add('shake');
-            setTimeout(() => urlInput.classList.remove('shake'), 500);
+        if (!url) {
+            this.showNotification('Please enter a URL', 'error');
             return;
         }
         
-        // Show loading
+        if (!this.isValidURL(url)) {
+            this.showNotification('Please enter a valid URL (include http:// or https://)', 'error');
+            if (urlInput) {
+                urlInput.classList.add('shake');
+                setTimeout(() => urlInput.classList.remove('shake'), 500);
+            }
+            return;
+        }
+        
         this.showLoading();
         
         try {
-            console.log('Starting audit for:', url);
-            
             const response = await fetch(`${this.baseURL}/api/audit`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     url: url,
@@ -74,12 +96,15 @@ class SEOVisionPro {
             });
             
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.error || 'Audit failed');
+                const error = await response.json().catch(() => ({ error: 'Network error' }));
+                throw new Error(error.error || `HTTP ${response.status}`);
             }
             
             const data = await response.json();
-            console.log('Audit completed:', data);
+            
+            if (data.error) {
+                throw new Error(data.message || data.error);
+            }
             
             this.displayResults(data);
             
@@ -94,24 +119,41 @@ class SEOVisionPro {
         const loading = document.getElementById('loading');
         const btn = document.getElementById('auditButton');
         
-        // Disable button
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SCANNING...';
+        if (loading) loading.style.display = 'block';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SCANNING...';
+        }
         
-        // Show loading
-        loading.style.display = 'block';
-        
-        // Animate progress
-        let progress = 0;
+        this.animateProgress();
+    }
+
+    animateProgress() {
         const progressFill = document.getElementById('progressFill');
         const progressPercent = document.getElementById('progressPercent');
+        const progressText = document.getElementById('progressText');
+        
+        if (!progressFill) return;
+        
+        let progress = 0;
+        const stages = [
+            'Fetching URL...',
+            'Analyzing content...',
+            'Checking structure...',
+            'Generating report...'
+        ];
         
         const interval = setInterval(() => {
             progress += Math.random() * 5 + 1;
-            if (progress > 90) progress = 90; // Stop at 90% until API returns
+            if (progress > 90) progress = 90;
             
-            progressFill.style.width = `${progress}%`;
-            progressPercent.textContent = `${Math.floor(progress)}%`;
+            if (progressFill) progressFill.style.width = `${progress}%`;
+            if (progressPercent) progressPercent.textContent = `${Math.floor(progress)}%`;
+            
+            const stageIndex = Math.min(Math.floor(progress / 25), stages.length - 1);
+            if (progressText && stages[stageIndex]) {
+                progressText.textContent = stages[stageIndex];
+            }
             
             this.progressInterval = interval;
         }, 200);
@@ -121,105 +163,98 @@ class SEOVisionPro {
         const loading = document.getElementById('loading');
         const btn = document.getElementById('auditButton');
         
-        // Clear progress interval
         if (this.progressInterval) {
             clearInterval(this.progressInterval);
         }
         
-        // Complete progress bar
-        const progressFill = document.getElementById('progressFill');
-        const progressPercent = document.getElementById('progressPercent');
-        progressFill.style.width = '100%';
-        progressPercent.textContent = '100%';
-        
-        // Hide loading after delay
         setTimeout(() => {
-            loading.style.display = 'none';
-            
-            // Reset button
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-satellite-dish"></i><span>INITIATE SCAN</span><div class="btn-pulse"></div>';
+            if (loading) loading.style.display = 'none';
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-satellite-dish"></i><span>INITIATE SCAN</span><div class="btn-pulse"></div>';
+            }
         }, 500);
     }
 
     displayResults(data) {
         console.log('Displaying results:', data);
         
-        // Hide loading
         this.hideLoading();
         
-        // Show dashboard
         const dashboard = document.getElementById('dashboard');
-        dashboard.style.display = 'block';
+        if (dashboard) {
+            dashboard.style.display = 'block';
+            dashboard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
         
-        // Scroll to dashboard
-        dashboard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        
-        // Set timestamp
+        // Update timestamp
         const timestamp = new Date().toLocaleString();
-        document.getElementById('timestamp').textContent = timestamp;
+        const timestampEl = document.getElementById('timestamp');
+        if (timestampEl) timestampEl.textContent = timestamp;
         
-        // Display scores
+        // Update scores
         if (data.scores) {
-            document.getElementById('techScore').textContent = data.scores.technical;
-            document.getElementById('contentScore').textContent = data.scores.content;
-            document.getElementById('authorityScore').textContent = data.scores.authority;
-            document.getElementById('overallScore').textContent = data.scores.overall;
+            this.updateElement('techScore', data.scores.technical);
+            this.updateElement('contentScore', data.scores.content);
+            this.updateElement('authorityScore', data.scores.authority);
+            this.updateElement('overallScore', data.scores.overall);
             
-            // Color code scores
             this.applyScoreColor('techScore', data.scores.technical);
             this.applyScoreColor('contentScore', data.scores.content);
             this.applyScoreColor('authorityScore', data.scores.authority);
             this.applyScoreColor('overallScore', data.scores.overall);
         }
         
-        // Display metrics
+        // Update metrics
         if (data.metrics) {
-            // Technical metrics
-            document.getElementById('wordCount').textContent = `${data.metrics.word_count} words`;
-            document.getElementById('pageTitle').textContent = data.metrics.page_title;
-            document.getElementById('metaDescription').textContent = data.metrics.meta_description;
-            
-            // Structure metrics
-            document.getElementById('h1Count').textContent = data.metrics.h1_count;
-            document.getElementById('h2Count').textContent = data.metrics.h2_count;
-            document.getElementById('imagesTotal').textContent = data.metrics.images_total;
-            document.getElementById('imagesWithAlt').textContent = data.metrics.images_with_alt;
-            document.getElementById('internalLinks').textContent = data.metrics.internal_links;
-            document.getElementById('externalLinks').textContent = data.metrics.external_links;
-            
-            // Page size
-            document.getElementById('pageSize').textContent = `${Math.round(data.metrics.page_size_kb)} KB`;
+            this.updateElement('wordCount', `${data.metrics.word_count} words`);
+            this.updateElement('pageTitle', data.metrics.title || 'No title');
+            this.updateElement('metaDescription', data.metrics.meta_description || 'No description');
+            this.updateElement('h1Count', data.metrics.h1_count);
+            this.updateElement('h2Count', data.metrics.h2_count);
+            this.updateElement('imagesTotal', data.metrics.images_total);
+            this.updateElement('imagesWithAlt', data.metrics.images_with_alt);
+            this.updateElement('internalLinks', data.metrics.internal_links);
+            this.updateElement('externalLinks', data.metrics.external_links);
+            this.updateElement('pageSize', `${data.metrics.page_size_kb} KB`);
         }
         
-        // Display issues
+        // Update issues
         const issuesList = document.getElementById('issuesList');
-        issuesList.innerHTML = '';
-        
-        if (data.issues && data.issues.length > 0) {
-            data.issues.forEach(issue => {
-                const li = document.createElement('li');
-                li.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${issue}`;
-                issuesList.appendChild(li);
-            });
-        } else {
-            issuesList.innerHTML = '<li style="color:#00ff9d"><i class="fas fa-check-circle"></i> No critical issues found</li>';
+        if (issuesList) {
+            issuesList.innerHTML = '';
+            
+            if (data.issues && data.issues.length > 0) {
+                data.issues.forEach(issue => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${issue}`;
+                    issuesList.appendChild(li);
+                });
+            } else {
+                issuesList.innerHTML = '<li style="color:#00ff9d"><i class="fas fa-check-circle"></i> No critical issues found</li>';
+            }
         }
         
-        // Display recommendations
+        // Update recommendations
         const recommendationsList = document.getElementById('recommendationsList');
-        recommendationsList.innerHTML = '';
-        
-        if (data.recommendations && data.recommendations.length > 0) {
-            data.recommendations.forEach(rec => {
-                const li = document.createElement('li');
-                li.innerHTML = `<i class="fas fa-lightbulb"></i> ${rec}`;
-                recommendationsList.appendChild(li);
-            });
+        if (recommendationsList) {
+            recommendationsList.innerHTML = '';
+            
+            if (data.recommendations && data.recommendations.length > 0) {
+                data.recommendations.forEach(rec => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<i class="fas fa-lightbulb"></i> ${rec}`;
+                    recommendationsList.appendChild(li);
+                });
+            }
         }
         
-        // Show success notification
-        this.showNotification('SEO audit completed successfully!', 'success');
+        this.showNotification('✅ SEO audit completed!', 'success');
+    }
+
+    updateElement(id, value) {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
     }
 
     applyScoreColor(elementId, score) {
@@ -227,50 +262,35 @@ class SEOVisionPro {
         if (!element) return;
         
         if (score >= 80) {
-            element.style.color = '#00ff9d'; // Green
+            element.style.color = '#00ff9d';
         } else if (score >= 60) {
-            element.style.color = '#ffd700'; // Gold/Yellow
+            element.style.color = '#ffd700';
         } else {
-            element.style.color = '#ff4444'; // Red
+            element.style.color = '#ff4444';
         }
     }
 
     resetAudit() {
-        // Reset form
-        document.getElementById('urlInput').value = '';
+        const urlInput = document.getElementById('urlInput');
+        if (urlInput) urlInput.value = '';
         
-        // Hide dashboard
-        document.getElementById('dashboard').style.display = 'none';
+        const dashboard = document.getElementById('dashboard');
+        if (dashboard) dashboard.style.display = 'none';
         
-        // Enable button
         const btn = document.getElementById('auditButton');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-satellite-dish"></i><span>INITIATE SCAN</span><div class="btn-pulse"></div>';
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-satellite-dish"></i><span>INITIATE SCAN</span><div class="btn-pulse"></div>';
+        }
         
-        // Show notification
         this.showNotification('Ready for new audit', 'info');
-        
-        // Scroll to top
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    exportPDF() {
-        this.showNotification('Export feature coming soon!', 'info');
-        
-        // Demo effect
-        const element = document.getElementById('dashboard');
-        element.style.boxShadow = '0 0 0 2px #00f3ff';
-        setTimeout(() => element.style.boxShadow = '', 1000);
-    }
-
     showNotification(message, type = 'info') {
-        // Remove existing notification
+        // Remove existing
         const existing = document.querySelector('.notification');
         if (existing) existing.remove();
-        
-        // Create notification
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
         
         const icons = {
             'success': 'check-circle',
@@ -279,25 +299,23 @@ class SEOVisionPro {
             'warning': 'exclamation-triangle'
         };
         
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
         notification.innerHTML = `
             <i class="fas fa-${icons[type] || 'info-circle'}"></i>
             <span>${message}</span>
             <button class="notification-close"><i class="fas fa-times"></i></button>
         `;
         
-        // Add to body
         document.body.appendChild(notification);
         
-        // Show with animation
         setTimeout(() => notification.classList.add('show'), 10);
         
-        // Auto remove
         setTimeout(() => {
             notification.classList.remove('show');
             setTimeout(() => notification.remove(), 300);
         }, 5000);
         
-        // Close button
         notification.querySelector('.notification-close').addEventListener('click', () => {
             notification.classList.remove('show');
             setTimeout(() => notification.remove(), 300);
@@ -402,6 +420,10 @@ document.head.appendChild(style);
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    window.seoVisionPro = new SEOVisionPro();
-    console.log('SEO Vision Pro Ready!');
+    try {
+        window.seoVisionPro = new SEOVisionPro();
+        console.log('✅ SEO Vision Pro Ready!');
+    } catch (error) {
+        console.error('❌ Failed to initialize:', error);
+    }
 });
