@@ -10,17 +10,17 @@ def cors_response(data, status=200):
     response.headers.add("Access-Control-Allow-Methods", "GET, OPTIONS")
     return response
 
-# --- Simple Readability Calculator (No External Library) ---
-def calculate_readability(text):
-    if not text: return 0
+# --- Readability Logic ---
+def get_readability(text):
+    if not text or len(text.split()) < 5: return 0
+    words = len(text.split())
     sentences = len(re.split(r'[.!?]+', text)) or 1
-    words = len(text.split()) or 1
-    # Simplified Flesch-Kincaid: Higher is easier to read
-    avg_sentence_len = words / sentences
-    score = 206.835 - (1.015 * avg_sentence_len) - 10 # Approx adjustment
-    return max(0, min(100, int(score)))
+    # Simple Automated Readability Index (ARI) approximation
+    score = 4.71 * (len(text) / words) + 0.5 * (words / sentences) - 21.43
+    # Normalize to 0-100 (Lower ARI = Easier = Higher Score)
+    return max(0, min(100, int(100 - score)))
 
-# --- Main Route ---
+# --- Main Handler ---
 @app.route('/api/analyze', methods=['GET', 'OPTIONS'])
 def analyze():
     if request.method == "OPTIONS": return cors_response({"ok": True})
@@ -30,18 +30,11 @@ def analyze():
     try:
         import requests
         from bs4 import BeautifulSoup
+        from collections import Counter
     except ImportError as e:
         return cors_response({"error": f"Import Failed: {e}"}, 500)
 
-    # Self-Repair Guard Class
-    class SelfRepair:
-        @staticmethod
-        def guard(func, fallback):
-            try: return func()
-            except Exception as e:
-                print(f"Error: {e}")
-                return fallback
-
+    # ENV KEYS
     GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
     OPR_API_KEY = os.environ.get("OPR_API_KEY")
 
@@ -51,71 +44,114 @@ def analyze():
 
     output = {}
 
-    # 1. LOGIC: Scraping (With Manual Readability)
+    # ----------------------------------------------------
+    # 1. STEALTH SCRAPING (Fixes "Word Count 27")
+    # ----------------------------------------------------
     def run_scraping():
-        headers = {'User-Agent': 'SEO-Pro-Bot/2.0'}
-        resp = requests.get(url, headers=headers, timeout=9)
-        soup = BeautifulSoup(resp.text, 'html.parser')
-        text = soup.get_text(" ", strip=True)
-        
-        # Intent Logic
-        blob = (soup.title.string or "") + " " + text[:600]
-        intent = "Navigational"
-        if any(x in blob.lower() for x in ['buy', 'price', 'cart', 'sale', 'shop']): intent = "Transactional"
-        elif any(x in blob.lower() for x in ['how', 'guide', 'tips', 'learn', 'tutorial']): intent = "Informational"
-
-        return {
-            "strategy": { "intent": intent, "status": resp.status_code, "server": resp.headers.get('Server', 'Unknown') },
-            "content": { 
-                "word_count": len(text.split()), 
-                "readability": calculate_readability(text), 
-                "title_len": len(soup.title.string) if soup.title else 0,
-                "description": bool(soup.find('meta', attrs={'name': 'description'}))
-            }
+        # Mimic Real Chrome Browser
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Referer': 'https://www.google.com/'
         }
+        
+        try:
+            resp = requests.get(url, headers=headers, timeout=10)
+            soup = BeautifulSoup(resp.text, 'html.parser')
+            
+            # Remove scripts and styles to get REAL text
+            for script in soup(["script", "style", "nav", "footer"]):
+                script.decompose()
+            
+            text = soup.get_text(" ", strip=True)
+            words = re.findall(r'\w+', text.lower())
+            
+            # Keyword Density
+            stopwords = {'the','and','to','of','a','in','is','it','you','that','for','on','with','as','are','this','by','be','or','at','from','your','can','we','an'}
+            meaningful = [w for w in words if w not in stopwords and len(w) > 3]
+            top_kw = Counter(meaningful).most_common(5)
 
-    output.update(SelfRepair.guard(run_scraping, {
-        "strategy": {"intent": "Unknown", "status": 0},
-        "content": {"word_count": 0, "readability": 0}
-    }))
+            # Link Counting
+            links = soup.find_all('a', href=True)
+            in_links = len([l for l in links if url in l['href'] or l['href'].startswith('/')])
+            
+            # Social Image
+            og_img = soup.find('meta', attrs={'property': 'og:image'})
+            
+            # Intent
+            intent_blob = (soup.title.string or "") + " " + text[:500]
+            intent = "Informational"
+            if any(x in intent_blob.lower() for x in ['shop', 'price', 'buy', 'cart', 'checkout']): intent = "Transactional"
+            elif any(x in intent_blob.lower() for x in ['contact', 'location', 'address']): intent = "Navigational"
 
-    # 2. LOGIC: Technical (Better Error Handling)
+            return {
+                "strategy": { "intent": intent, "status": resp.status_code, "server": resp.headers.get('Server', 'Linux') },
+                "content": {
+                    "word_count": len(words),
+                    "readability": get_readability(text),
+                    "title_len": len(soup.title.string) if soup.title else 0,
+                    "description": bool(soup.find('meta', attrs={'name': 'description'})),
+                    "keywords": top_kw,
+                    "social_image": bool(og_img),
+                    "links_internal": in_links,
+                    "links_external": len(links) - in_links
+                }
+            }
+        except Exception as e:
+            return {
+                "strategy": {"intent": "Error", "status": 0}, 
+                "content": {"error": str(e), "word_count": 0}
+            }
+
+    # Execute Scraping
+    scrape_data = run_scraping()
+    output.update(scrape_data)
+
+    # ----------------------------------------------------
+    # 2. GOOGLE API (With Error Reporting)
+    # ----------------------------------------------------
     def run_google():
-        if not GOOGLE_API_KEY: return {"speed_score": 0, "lcp": "No Key", "cls": "No Key"}
+        if not GOOGLE_API_KEY: 
+            return {"speed_score": 0, "lcp": "No Key", "cls": "No Key"}
         
-        g_url = f"https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={url}&strategy=mobile&key={GOOGLE_API_KEY}"
-        resp = requests.get(g_url)
-        data = resp.json()
+        try:
+            g_url = f"https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={url}&strategy=mobile&key={GOOGLE_API_KEY}"
+            api_resp = requests.get(g_url)
+            data = api_resp.json()
 
-        # Check for Google API Errors (Quota, Invalid URL, etc)
-        if 'error' in data:
-            err_msg = data['error'].get('message', 'API Error')
-            return {"speed_score": 0, "lcp": "API Fail", "cls": err_msg[:15]}
+            # DEBUG: Catch Google Errors
+            if 'error' in data:
+                err = data['error']
+                # Return the ACTUAL error message (e.g., "Bad Request", "Quota")
+                return {"speed_score": 0, "lcp": "API Error", "cls": str(err.get('code', 500))}
 
-        # Extract Data
-        lh = data.get('lighthouseResult', {})
-        score = lh.get('categories', {}).get('performance', {}).get('score', 0)
-        lcp = lh.get('audits', {}).get('largest-contentful-paint', {}).get('displayValue', 'N/A')
-        cls = lh.get('audits', {}).get('cumulative-layout-shift', {}).get('displayValue', 'N/A')
-        
-        return {"speed_score": int(score * 100), "lcp": lcp, "cls": cls}
+            lh = data.get('lighthouseResult', {})
+            score = lh.get('categories', {}).get('performance', {}).get('score', 0)
+            
+            return {
+                "speed_score": int(score * 100),
+                "lcp": lh.get('audits', {}).get('largest-contentful-paint', {}).get('displayValue', 'N/A'),
+                "cls": lh.get('audits', {}).get('cumulative-layout-shift', {}).get('displayValue', 'N/A')
+            }
+        except Exception as e:
+            return {"speed_score": 0, "lcp": "Crash", "cls": str(e)}
 
-    output['technical'] = SelfRepair.guard(run_google, {"speed_score": 0, "lcp": "Error", "cls": "Error"})
+    output['technical'] = run_google()
 
-    # 3. LOGIC: Authority (OPR)
+    # ----------------------------------------------------
+    # 3. AUTHORITY (OPR)
+    # ----------------------------------------------------
     def run_opr():
-        if not OPR_API_KEY: return {"page_rank": 0, "rank": "No Key", "domain": "N/A"}
-        domain = url.split("//")[-1].split("/")[0].replace("www.", "")
-        
-        resp = requests.get(f"https://openpagerank.com/api/v1.0/getPageRank?domains[]={domain}", headers={'API-OPR': OPR_API_KEY})
-        data = resp.json()
-        
-        if data.get('status_code') != 200:
-             return {"page_rank": 0, "rank": "API Error", "domain": domain}
+        if not OPR_API_KEY: return {"page_rank": 0, "rank": "No Key", "domain": "Config Required"}
+        try:
+            domain = url.split("//")[-1].split("/")[0].replace("www.", "")
+            resp = requests.get(f"https://openpagerank.com/api/v1.0/getPageRank?domains[]={domain}", headers={'API-OPR': OPR_API_KEY})
+            d = resp.json()['response'][0]
+            return { "page_rank": d['page_rank_decimal'] or 0, "rank": d['rank'] or "Unranked", "domain": d['domain'] }
+        except:
+            return {"page_rank": 0, "rank": "N/A", "domain": "API Error"}
 
-        d = data['response'][0]
-        return { "page_rank": d['page_rank_decimal'] or 0, "rank": d['rank'] or "Unranked", "domain": d['domain'] }
-
-    output['authority'] = SelfRepair.guard(run_opr, {"page_rank": 0, "rank": "N/A", "domain": "Unknown"})
+    output['authority'] = run_opr()
 
     return cors_response(output)
